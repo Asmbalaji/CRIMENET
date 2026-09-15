@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, ShieldAlert, Bell, LogOut, User, Lock, Activity } from 'lucide-react';
 import { TacticalAlert } from '../data/mockData';
+import { useData } from '../context/DataContext';
 
 interface HeaderProps {
   activeViewTitle: string;
@@ -17,6 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   userRole,
 }) => {
+  const { searchQuery, setSearchQuery } = useData();
   const unreadAlertsCount = alerts.filter((a) => !a.read).length;
 
   return (
@@ -44,10 +46,12 @@ export const Header: React.FC<HeaderProps> = ({
         <input
           type="text"
           className="input-field"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search Suspect Name, Alias, Case ID, Burner SIM or HVT Hash..."
-          style={{ paddingLeft: '40px', fontSize: '0.825rem', fontFamily: 'var(--font-mono)' }}
+          style={{ paddingLeft: '40px', paddingRight: '80px', fontSize: '0.825rem', fontFamily: 'var(--font-mono)', width: '100%', boxSizing: 'border-box' }}
         />
-        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.08)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>
+        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.08)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'var(--font-mono)', pointerEvents: 'none' }}>
           CTRL + K
         </div>
       </div>

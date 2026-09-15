@@ -121,28 +121,32 @@ export function App() {
   }
 
   return (
-    <div className="app-container">
+    <div className="app-container print:block print:w-full">
       {!isAuthenticated && <LoginModal onLoginSuccess={handleLoginSuccess} />}
 
       {/* Main Left Sidebar */}
-      <Sidebar
-        activeView={activeView}
-        onSelectView={(v) => handleNavigate(v)}
-        unreadAlertsCount={alerts.filter((a) => !a.read).length}
-      />
+      <div className="print:hidden">
+        <Sidebar
+          activeView={activeView}
+          onSelectView={(v) => handleNavigate(v)}
+          unreadAlertsCount={alerts.filter((a) => !a.read).length}
+        />
+      </div>
 
       {/* Main App Layout */}
-      <div className="main-content">
-        <Header
-          activeViewTitle={getViewTitle(activeView)}
-          alerts={alerts}
-          onOpenAlerts={() => setIsAlertsDrawerOpen(true)}
-          onLogout={handleLogout}
-          userRole={userRole}
-        />
+      <div className="main-content print:w-full print:block print:m-0 print:p-0">
+        <div className="print:hidden">
+          <Header
+            activeViewTitle={getViewTitle(activeView)}
+            alerts={alerts}
+            onOpenAlerts={() => setIsAlertsDrawerOpen(true)}
+            onLogout={handleLogout}
+            userRole={userRole}
+          />
+        </div>
 
         {/* View Switcher Container */}
-        <main className="view-container">
+        <main className="view-container print:w-full print:block print:m-0 print:p-0">
           {activeView === 'dashboard' && (
             <DashboardView
               onNavigate={handleNavigate}

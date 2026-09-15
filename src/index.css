@@ -278,3 +278,270 @@ body {
     min-height: 100vh;
   }
 }
+
+.map-tiles-dark {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+/* Network Intel Module Redesign */
+.ultra-glass-panel {
+  background: rgba(10, 15, 29, 0.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.vertical-controls {
+  background: rgba(13, 17, 23, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+.vertical-controls button {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vertical-controls button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.radial-gauge-glow {
+  filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.8));
+}
+
+@keyframes pulse-neon {
+  0% { filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6)); }
+  50% { filter: drop-shadow(0 0 24px rgba(245, 158, 11, 0.9)); }
+  100% { filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6)); }
+}
+
+
+.radar-spinner {
+  animation: radar-scan 4s linear infinite;
+}
+
+/* Grid & Layout Structure */
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-darkest);
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  position: relative;
+  background: radial-gradient(circle at 50% 0%, rgba(15, 23, 42, 0.8) 0%, var(--bg-primary) 100%);
+}
+
+.view-container {
+  padding: 24px;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1;
+}
+
+/* Button & Controls System */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  font-family: var(--font-sans);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #00f0ff 0%, #00a8ff 100%);
+  color: #050811;
+  font-weight: 600;
+  box-shadow: 0 0 15px var(--accent-cyan-glow);
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+}
+
+.btn-secondary {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+}
+.btn-secondary:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-cyan);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: #ffffff;
+  box-shadow: 0 0 15px var(--accent-red-glow);
+}
+.btn-danger:hover {
+  filter: brightness(1.1);
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(10, 15, 29, 0.8);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.input-field:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px var(--accent-cyan-glow);
+}
+
+/* Card Component Styles */
+.card-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Responsive Media Queries */
+@media (max-width: 1024px) {
+  .app-container {
+    flex-direction: column;
+  }
+  .view-container {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .view-container {
+    padding: 10px;
+  }
+  div[style*="gridTemplateColumns: '1fr 340px'"],
+  div[style*="gridTemplateColumns: 1fr 340px"],
+  div[style*="gridTemplateColumns: '1fr 300px'"],
+  div[style*="gridTemplateColumns: 1fr 300px"] {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+  }
+  
+  /* Reset hardcoded calc heights for responsive flow */
+  div[style*="height: 'calc(100vh - 120px)'"],
+  div[style*="height: calc(100vh - 120px)"] {
+    height: auto !important;
+    min-height: 100vh;
+  }
+}
+
+.map-tiles-dark {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+/* Network Intel Module Redesign */
+.ultra-glass-panel {
+  background: rgba(10, 15, 29, 0.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.vertical-controls {
+  background: rgba(13, 17, 23, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+.vertical-controls button {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vertical-controls button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.radial-gauge-glow {
+  filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.8));
+}
+
+@keyframes pulse-neon {
+  0% { filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6)); }
+  50% { filter: drop-shadow(0 0 24px rgba(245, 158, 11, 0.9)); }
+  100% { filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6)); }
+}
+
+.animate-pulse-neon {
+  animation: pulse-neon 2s infinite ease-in-out;
+}
+
+ /* Print Modifiers for Print Layouts */
+@media print {
+  .print\:hidden { display: none !important; }
+  .print\:block { display: block !important; }
+  .print\:w-full { width: 100% !important; }
+  .print\:m-0 { margin: 0 !important; }
+  .print\:p-0 { padding: 0 !important; }
+  .print\:bg-white { background-color: #ffffff !important; }
+  .print\:text-black { color: #000000 !important; }
+  .print\:text-black * { color: #000000 !important; }
+}

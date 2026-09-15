@@ -22,6 +22,8 @@ interface DataContextType {
   refreshData: () => Promise<void>;
   addLocalCase: (c: InvestigationCase) => void;
   addLocalSuspect: (s: Suspect) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -36,6 +38,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [alerts, setAlerts] = useState<TacticalAlert[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const [localCases, setLocalCases] = useState<InvestigationCase[]>(() => {
     const saved = localStorage.getItem('localCases');
@@ -113,10 +116,28 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem('localSuspects', JSON.stringify(updated));
   };
 
+  const allSuspects = [...localSuspects, ...suspects];
+  const allCases = [...localCases, ...cases];
+
+  const filteredSuspects = searchQuery 
+    ? allSuspects.filter(s => 
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        s.alias.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allSuspects;
+
+  const filteredCases = searchQuery
+    ? allCases.filter(c =>
+        c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.caseNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.syndicate.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allCases;
+
   return (
     <DataContext.Provider value={{
-      suspects: [...localSuspects, ...suspects],
-      cases: [...localCases, ...cases],
+      suspects: filteredSuspects,
+      cases: filteredCases,
       evidence,
       networkNodes,
       networkEdges,
@@ -126,7 +147,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       error,
       refreshData: fetchData,
       addLocalCase,
-      addLocalSuspect
+      addLocalSuspect,
+      searchQuery,
+      setSearchQuery
     }}>
       {children}
     </DataContext.Provider>

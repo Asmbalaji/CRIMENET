@@ -3,6 +3,9 @@ import { MapPin, Filter, Layers, Navigation, AlertTriangle, Shield, Flame, Activ
 import { CrimeLocation } from '../data/mockData';
 import { ViewId } from '../components/Sidebar';
 import { useData } from '../context/DataContext';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface CrimeMapViewProps {
   initialSelectedLocation?: CrimeLocation | null;
@@ -66,96 +69,59 @@ export const CrimeMapView: React.FC<CrimeMapViewProps> = ({ initialSelectedLocat
             background: '#040711',
             borderRadius: '12px',
             overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
           }}
         >
-          {/* Simulated India Map Vector Outline Graphic */}
-          <div style={{ position: 'absolute', inset: 0, opacity: 0.15, backgroundImage: 'radial-gradient(circle at 40% 50%, rgba(0, 240, 255, 0.2) 0%, transparent 60%)' }} />
-
-          {/* Heatmap Layer Effect Simulation */}
-          {showHeatmap && (
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-              <div style={{ position: 'absolute', top: '35%', left: '30%', width: '180px', height: '180px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(239,68,68,0.3) 0%, rgba(245,158,11,0.15) 50%, transparent 70%)', filter: 'blur(20px)' }} />
-              <div style={{ position: 'absolute', top: '55%', left: '25%', width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,240,255,0.25) 0%, transparent 70%)', filter: 'blur(25px)' }} />
-              <div style={{ position: 'absolute', top: '45%', left: '70%', width: '150px', height: '150px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,85,247,0.25) 0%, transparent 70%)', filter: 'blur(20px)' }} />
-            </div>
-          )}
-
-          {/* Interactive Map Pin Markers */}
-          <div style={{ position: 'absolute', inset: 0 }}>
-            {filteredLocations.map((loc, index) => {
+          <MapContainer 
+            center={[22.5937, 78.9629]} 
+            zoom={5} 
+            style={{ height: '100%', width: '100%', zIndex: 1, background: '#040711' }}
+            zoomControl={false}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              className="map-tiles-dark"
+            />
+            {filteredLocations.map((loc) => {
               const isSelected = selectedLocation?.id === loc.id;
-              const topPos = `${25 + index * 14}%`;
-              const leftPos = `${22 + index * 15}%`;
-
-              return (
-                <div
-                  key={loc.id}
-                  style={{
-                    position: 'absolute',
-                    top: topPos,
-                    left: leftPos,
-                    transform: 'translate(-50%, -50%)',
-                    cursor: 'pointer',
-                    zIndex: isSelected ? 10 : 2,
-                  }}
-                  onClick={() => setSelectedLocation(loc)}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    {/* Animated Pulse Ring for Critical */}
-                    {loc.threatLevel === 'CRITICAL' && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          background: 'rgba(239, 68, 68, 0.3)',
-                          border: '1px solid #ef4444',
-                          animation: 'pulse 1.5s infinite',
-                        }}
-                      />
-                    )}
-
-                    <div
-                      style={{
-                        padding: '8px',
-                        borderRadius: '50%',
-                        background: loc.threatLevel === 'CRITICAL' ? 'var(--accent-red)' : 'var(--accent-amber)',
-                        color: '#050811',
-                        boxShadow: `0 0 15px ${loc.threatLevel === 'CRITICAL' ? 'var(--accent-red)' : 'var(--accent-amber)'}`,
-                        border: isSelected ? '2px solid #ffffff' : 'none',
-                      }}
-                    >
-                      <MapPin size={18} />
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: '6px',
-                        background: 'rgba(10,15,29,0.92)',
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        border: '1px solid var(--border-subtle)',
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
-                        color: '#ffffff',
-                        fontFamily: 'var(--font-mono)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {loc.city.split(',')[0]}
-                    </div>
+              const isCritical = loc.threatLevel === 'CRITICAL';
+              const color = isCritical ? '#ef4444' : '#f59e0b';
+              const pulseHtml = isCritical ? `<div style="position: absolute; width: 40px; height: 40px; border-radius: 50%; background: rgba(239, 68, 68, 0.3); border: 1px solid #ef4444; animation: pulse 1.5s infinite; top: -11px; left: -11px;"></div>` : '';
+              const iconHtml = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                  ${pulseHtml}
+                  <div style="padding: 8px; border-radius: 50%; background: ${color}; color: #050811; box-shadow: 0 0 15px ${color}; border: ${isSelected ? '2px solid #ffffff' : 'none'}; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  </div>
+                  <div style="margin-top: 6px; background: rgba(10,15,29,0.92); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; font-weight: 700; color: #ffffff; font-family: monospace; white-space: nowrap;">
+                    ${loc.city.split(',')[0]}
                   </div>
                 </div>
+              `;
+              
+              const customIcon = L.divIcon({
+                html: iconHtml,
+                className: 'custom-map-marker',
+                iconSize: [40, 60],
+                iconAnchor: [20, 20],
+              });
+
+              return (
+                <Marker 
+                  key={loc.id} 
+                  position={[loc.lat, loc.lng]} 
+                  icon={customIcon}
+                  eventHandlers={{
+                    click: () => setSelectedLocation(loc)
+                  }}
+                  zIndexOffset={isSelected ? 1000 : 0}
+                />
               );
             })}
-          </div>
+          </MapContainer>
 
           {/* Map Compass */}
-          <div style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(10,15,29,0.85)', padding: '8px', borderRadius: '8px', border: '1px solid var(--border-subtle)', color: 'var(--accent-cyan)' }}>
+          <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, background: 'rgba(10,15,29,0.85)', padding: '8px', borderRadius: '8px', border: '1px solid var(--border-subtle)', color: 'var(--accent-cyan)' }}>
             <Navigation size={20} />
           </div>
         </div>
