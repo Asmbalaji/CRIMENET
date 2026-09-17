@@ -162,7 +162,7 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
     setIsNewCaseModalOpen(false);
   };
 
-  const handleConfirmVerifiedData = (verifiedData: any) => {
+  const handleConfirmVerifiedData = async (verifiedData: any) => {
     // Check duplicates
     if (cases.some(c => c.caseNumber === verifiedData.case?.caseNumber || c.firNumber === verifiedData.case?.firNumber)) {
       if (!window.confirm("Possible duplicate case detected. Continue anyway?")) {
@@ -253,11 +253,20 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
       });
     }
 
-    addLocalCase(newCase);
+    await addLocalCase(newCase);
     setExtractedData(null);
     setUploadedDocument(null);
     setUploadError('');
     setIsNewCaseModalOpen(false);
+
+    // Trigger cross-case analysis
+    try {
+      fetch(`http://localhost:5000/api/cases/${newCaseId}/analyze-links`, { method: 'POST' }).then(() => {
+        alert('Cross-Case Analysis completed. Check the Cross-Case Intelligence Dashboard.');
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (

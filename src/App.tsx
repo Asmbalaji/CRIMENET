@@ -14,6 +14,7 @@ import { EvidenceView } from './views/EvidenceView';
 import { ReportsView } from './views/ReportsView';
 import { AlertsView } from './views/AlertsView';
 import { SettingsView } from './views/SettingsView';
+import { CrossCaseView } from './views/CrossCaseView';
 
 import {
   Suspect,
@@ -95,6 +96,8 @@ export function App() {
         return 'Intelligence Report Builder';
       case 'alerts':
         return 'Real-time Tactical Alert Stream';
+      case 'cross-case':
+        return 'Cross-Case Intelligence Dashboard';
       case 'settings':
         return 'System Configuration';
       default:
@@ -188,6 +191,12 @@ export function App() {
 
           {activeView === 'ai' && (
             <AiInvestigationView 
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {activeView === 'cross-case' && (
+            <CrossCaseView 
               onNavigate={handleNavigate}
             />
           )}

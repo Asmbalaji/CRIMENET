@@ -16,11 +16,430 @@
       ],
       "evidenceCount": 1,
       "isPublicRecord": false
+    },
+    {
+      "id": "SIH-CRIM-2026-277",
+      "caseNumber": "CR/2026/00417",
+      "firNumber": "0231/2026",
+      "title": "tilte",
+      "status": "ACTIVE",
+      "severity": "HIGH",
+      "dateOpened": "12-Mar-2026",
+      "leadOfficer": "Agent Synthetic",
+      "syndicate": "Unknown",
+      "suspectIds": [
+        "SUS-EXT-6268",
+        "SUS-EXT-2911",
+        "SUS-EXT-5849",
+        "SUS-EXT-1636",
+        "SUS-EXT-5065",
+        "SUS-EXT-3116",
+        "SUS-EXT-8329"
+      ],
+      "location": "dindigul, null",
+      "evidenceCount": 3,
+      "summary": "Sections Applied: BNS Sections 303(2) (Theft), 324(4) (Mischief causing damage)\nNature of Offence: Theft of two-wheeler from residential premises\nPlace of Occurrence: No. 12, 4th Street, Anna Nagar, Chennai\nDate & Time of Occurrence: 10-Mar-2026, approx. 11:30 PM\nProperty Involved: One Honda Activa (Reg. No. TN-09-XXXX), estimated value Rs. 65,000",
+      "isPublicRecord": false
+    },
+    {
+      "id": "CAS-TEST-A",
+      "caseNumber": "T-A",
+      "title": "Case Alpha",
+      "status": "ACTIVE",
+      "severity": "HIGH",
+      "leadOfficer": "Insp. Test",
+      "dateOpened": "2026-09-17T19:11:36.585Z",
+      "summary": "Ramesh Bhai was found with illegal items in Delhi.",
+      "syndicate": "Unknown",
+      "location": "Delhi",
+      "suspectIds": [
+        "SUS-TEST-002"
+      ],
+      "evidenceCount": 1,
+      "isPublicRecord": false
+    },
+    {
+      "id": "CAS-TEST-B",
+      "caseNumber": "T-B",
+      "title": "Case Beta",
+      "status": "ACTIVE",
+      "severity": "HIGH",
+      "leadOfficer": "Insp. Test",
+      "dateOpened": "2026-09-17T19:11:36.741Z",
+      "summary": "Ramesh Bhai was arrested for smuggling in Vasant Kunj.",
+      "syndicate": "Unknown",
+      "location": "Delhi",
+      "suspectIds": [
+        "SUS-TEST-002"
+      ],
+      "evidenceCount": 1,
+      "isPublicRecord": false
+    },
+    {
+      "id": "CAS-TEST-A",
+      "caseNumber": "T-A",
+      "title": "Case Alpha",
+      "status": "ACTIVE",
+      "severity": "HIGH",
+      "leadOfficer": "Insp. Test",
+      "dateOpened": "2026-09-17T19:12:44.760Z",
+      "summary": "Ramesh Bhai was found with illegal items in Delhi.",
+      "syndicate": "Unknown",
+      "location": "Delhi",
+      "suspectIds": [
+        "SUS-TEST-002"
+      ],
+      "evidenceCount": 1,
+      "isPublicRecord": false
+    },
+    {
+      "id": "CAS-TEST-B",
+      "caseNumber": "T-B",
+      "title": "Case Beta",
+      "status": "ACTIVE",
+      "severity": "HIGH",
+      "leadOfficer": "Insp. Test",
+      "dateOpened": "2026-09-17T19:12:44.814Z",
+      "summary": "Ramesh Bhai was arrested for smuggling in Vasant Kunj.",
+      "syndicate": "Unknown",
+      "location": "Delhi",
+      "suspectIds": [
+        "SUS-TEST-002"
+      ],
+      "evidenceCount": 1,
+      "isPublicRecord": false
     }
   ],
-  "suspects": [],
-  "evidence": [],
-  "locations": [],
+  "suspects": [
+    {
+      "id": "SUS-EXT-6268",
+      "name": "R. Meenakshi",
+      "alias": "Unknown",
+      "threatLevel": "MEDIUM",
+      "riskScore": 30,
+      "syndicate": "Unknown",
+      "role": "complainant",
+      "status": "PERSON OF INTEREST",
+      "lastKnownLocation": "Unknown",
+      "phone": "Unknown",
+      "avatarColor": "#10b981",
+      "biometrics": {
+        "dnaMatched": false,
+        "facialMatchScore": 0,
+        "fingerprintRegistered": false
+      },
+      "associatedCaseIds": [
+        "SIH-CRIM-2026-277"
+      ],
+      "riskFactors": {
+        "centrality": 10,
+        "severity": 20,
+        "communication": 0,
+        "financial": 0,
+        "location": 0
+      }
+    },
+    {
+      "id": "SUS-EXT-5849",
+      "name": "Inspector K. Vijayan",
+      "alias": "Unknown",
+      "threatLevel": "MEDIUM",
+      "riskScore": 30,
+      "syndicate": "Unknown",
+      "role": "other",
+      "status": "PERSON OF INTEREST",
+      "lastKnownLocation": "Unknown",
+      "phone": "Unknown",
+      "avatarColor": "#10b981",
+      "biometrics": {
+        "dnaMatched": false,
+        "facialMatchScore": 0,
+        "fingerprintRegistered": false
+      },
+      "associatedCaseIds": [
+        "SIH-CRIM-2026-277"
+      ],
+      "riskFactors": {
+        "centrality": 10,
+        "severity": 20,
+        "communication": 0,
+        "financial": 0,
+        "location": 0
+      }
+    },
+    {
+      "id": "SUS-EXT-5065",
+      "name": "Adv. P. Suresh Babu",
+      "alias": "Unknown",
+      "threatLevel": "MEDIUM",
+      "riskScore": 30,
+      "syndicate": "Unknown",
+      "role": "other",
+      "status": "PERSON OF INTEREST",
+      "lastKnownLocation": "Unknown",
+      "phone": "Unknown",
+      "avatarColor": "#10b981",
+      "biometrics": {
+        "dnaMatched": false,
+        "facialMatchScore": 0,
+        "fingerprintRegistered": false
+      },
+      "associatedCaseIds": [
+        "SIH-CRIM-2026-277"
+      ],
+      "riskFactors": {
+        "centrality": 10,
+        "severity": 20,
+        "communication": 0,
+        "financial": 0,
+        "location": 0
+      }
+    },
+    {
+      "id": "SUS-EXT-2911",
+      "name": "S. Arun Kumar",
+      "alias": "Unknown",
+      "threatLevel": "HIGH",
+      "riskScore": 75,
+      "syndicate": "Unknown",
+      "role": "accused",
+      "status": "PERSON OF INTEREST",
+      "lastKnownLocation": "Unknown",
+      "phone": "Unknown",
+      "avatarColor": "#10b981",
+      "biometrics": {
+        "dnaMatched": false,
+        "facialMatchScore": 0,
+        "fingerprintRegistered": false
+      },
+      "associatedCaseIds": [
+        "SIH-CRIM-2026-277"
+      ],
+      "riskFactors": {
+        "centrality": 10,
+        "severity": 20,
+        "communication": 0,
+        "financial": 0,
+        "location": 0
+      }
+    },
+    {
+      "id": "SUS-EXT-1636",
+      "name": "Adv. N. Rajeshwari",
+      "alias": "Unknown",
+      "threatLevel": "MEDIUM",
+      "riskScore": 30,
+      "syndicate": "Unknown",
+      "role": "other",
+      "status": "PERSON OF INTEREST",
+      "lastKnownLocation": "Unknown",
+      "phone": "Unknown",
+      "avatarColor": "#10b981",
+      "biometrics": {
+        "dnaMatched": false,
+        "facialMatchScore": 0,
+        "fingerprintRegistered": false
+      },
+      "associatedCaseIds": [
+        "SIH-CRIM-2026-277"
+      ],
+      "riskFactors": {
+        "centrality": 10,
+        "severity": 20,
+        "communication": 0,
+        "financial": 0,
+        "location": 0
+      }
+    },
+    {
+      "id": "SUS-EXT-8329",
+      "name": "PW-2",
+      "alias": "Unknown",
+      "threatLevel": "MEDIUM",
+      "riskScore": 30,
+      "syndicate": "Unknown",
+      "role": "witness",
+      "status": "PERSON OF INTEREST",
+      "lastKnownLocation": "Unknown",
+      "phone": "Unknown",
+      "avatarColor": "#10b981",
+      "biometrics": {
+        "dnaMatched": false,
+        "facialMatchScore": 0,
+        "fingerprintRegistered": false
+      },
+      "associatedCaseIds": [
+        "SIH-CRIM-2026-277"
+      ],
+      "riskFactors": {
+        "centrality": 10,
+        "severity": 20,
+        "communication": 0,
+        "financial": 0,
+        "location": 0
+      }
+    },
+    {
+      "id": "SUS-EXT-3116",
+      "name": "PW-1",
+      "alias": "Unknown",
+      "threatLevel": "MEDIUM",
+      "riskScore": 30,
+      "syndicate": "Unknown",
+      "role": "witness",
+      "status": "PERSON OF INTEREST",
+      "lastKnownLocation": "Unknown",
+      "phone": "Unknown",
+      "avatarColor": "#10b981",
+      "biometrics": {
+        "dnaMatched": false,
+        "facialMatchScore": 0,
+        "fingerprintRegistered": false
+      },
+      "associatedCaseIds": [
+        "SIH-CRIM-2026-277"
+      ],
+      "riskFactors": {
+        "centrality": 10,
+        "severity": 20,
+        "communication": 0,
+        "financial": 0,
+        "location": 0
+      }
+    },
+    {
+      "id": "SUS-TEST-002",
+      "name": "Ramesh Bhai",
+      "alias": "R-Snake",
+      "threatLevel": "HIGH",
+      "riskScore": 75,
+      "syndicate": "Unknown",
+      "role": "Accused",
+      "status": "PERSON OF INTEREST",
+      "lastKnownLocation": "Delhi",
+      "phone": "Unknown",
+      "avatarColor": "#10b981",
+      "biometrics": {
+        "dnaMatched": false,
+        "facialMatchScore": 0,
+        "fingerprintRegistered": false
+      },
+      "associatedCaseIds": [
+        "CAS-TEST-A",
+        "CAS-TEST-B"
+      ],
+      "riskFactors": {
+        "centrality": 10,
+        "severity": 20,
+        "communication": 0,
+        "financial": 0,
+        "location": 0
+      }
+    },
+    {
+      "id": "SUS-TEST-002",
+      "name": "Ramesh Bhai",
+      "alias": "R-Snake",
+      "threatLevel": "HIGH",
+      "riskScore": 75,
+      "syndicate": "Unknown",
+      "role": "Accused",
+      "status": "PERSON OF INTEREST",
+      "lastKnownLocation": "Delhi",
+      "phone": "Unknown",
+      "avatarColor": "#10b981",
+      "biometrics": {
+        "dnaMatched": false,
+        "facialMatchScore": 0,
+        "fingerprintRegistered": false
+      },
+      "associatedCaseIds": [
+        "CAS-TEST-A",
+        "CAS-TEST-B"
+      ],
+      "riskFactors": {
+        "centrality": 10,
+        "severity": 20,
+        "communication": 0,
+        "financial": 0,
+        "location": 0
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-EXT-5176",
+      "caseId": "SIH-CRIM-2026-277",
+      "title": "Fictional data — for application te.txt",
+      "category": "DOCUMENT",
+      "timestamp": "2026-09-17T18:58:02.238Z",
+      "source": "PDF Upload",
+      "confidenceScore": 100,
+      "summary": "Uploaded FIR/Case document automatically generated by extraction process.",
+      "metadata": {
+        "type": "text/plain"
+      }
+    }
+  ],
+  "locations": [
+    {
+      "id": "LOC-EXT-646",
+      "caseId": "SIH-CRIM-2026-277",
+      "title": "Anna Nagar Police Station",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "lat": 13.0836939,
+      "lng": 80.270186,
+      "type": "GENERAL_LOCATION",
+      "threatLevel": "HIGH",
+      "timestamp": "2026-09-17T18:58:02.236Z",
+      "sourcePages": [
+        1
+      ],
+      "sourceEvidenceId": "EV-EXT-5176",
+      "verified": true
+    },
+    {
+      "id": "LOC-EXT-1412",
+      "caseId": "SIH-CRIM-2026-277",
+      "title": "No. 12, 4th Street, Anna Nagar, Chennai",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "lat": 13.0836939,
+      "lng": 80.270186,
+      "type": "GENERAL_LOCATION",
+      "threatLevel": "HIGH",
+      "timestamp": "2026-09-17T18:58:02.237Z",
+      "sourcePages": [
+        1
+      ],
+      "sourceEvidenceId": "EV-EXT-5176",
+      "verified": true
+    }
+  ],
   "alerts": [],
-  "networkEdges": []
+  "networkEdges": [],
+  "crossCaseLinks": [
+    {
+      "targetCaseId": "CAS-TEST-A",
+      "reason": "Both cases involve suspect Ramesh Bhai (SUS-TEST-002).",
+      "supportingEntityId": "SUS-TEST-002",
+      "confidence": 90,
+      "relationshipType": "SHARED_SUSPECT",
+      "id": "CCL-WKRRYJJCP",
+      "sourceCaseId": "CAS-TEST-B",
+      "status": "PENDING",
+      "createdAt": "2026-09-17T19:12:46.162Z"
+    },
+    {
+      "targetCaseId": "CAS-TEST-A",
+      "reason": "Both cases are located in Delhi.",
+      "confidence": 80,
+      "relationshipType": "SHARED_LOCATION",
+      "id": "CCL-Q184CLA1J",
+      "sourceCaseId": "CAS-TEST-B",
+      "status": "PENDING",
+      "createdAt": "2026-09-17T19:12:46.162Z"
+    }
+  ]
 }

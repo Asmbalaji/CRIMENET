@@ -16,6 +16,10 @@ router.post('/entities', apiController.createEntity);
 router.post('/evidence', apiController.createEvidence);
 router.post('/locations', apiController.createLocation);
 
+router.get('/cross-case-links', apiController.getCrossCaseLinks);
+router.post('/cases/:id/analyze-links', apiController.detectCrossCaseLinks);
+router.put('/cross-case-links/:id/verify', apiController.verifyCrossCaseLink);
+
 router.get('/ai', apiController.getAi);
 router.post('/ai/analyze', apiController.analyzeAi);
 router.get('/health', (req, res) => res.json({ status: 'OK', message: 'Backend is running' }));

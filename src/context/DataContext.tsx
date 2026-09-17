@@ -6,7 +6,8 @@ import {
   NetworkNode, 
   NetworkEdge, 
   CrimeLocation,
-  TacticalAlert
+  TacticalAlert,
+  CrossCaseLink
 } from '../data/mockData';
 
 interface DataContextType {
@@ -17,6 +18,7 @@ interface DataContextType {
   networkEdges: NetworkEdge[];
   locations: CrimeLocation[];
   alerts: TacticalAlert[];
+  crossCaseLinks: CrossCaseLink[];
   loading: boolean;
   error: string | null;
   refreshData: () => Promise<void>;
@@ -38,6 +40,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [networkEdges, setNetworkEdges] = useState<NetworkEdge[]>([]);
   const [locations, setLocations] = useState<CrimeLocation[]>([]);
   const [alerts, setAlerts] = useState<TacticalAlert[]>([]);
+  const [crossCaseLinks, setCrossCaseLinks] = useState<CrossCaseLink[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -55,27 +58,30 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         resEvidence,
         resNetwork,
         resLocations,
-        resAlerts
+        resAlerts,
+        resCrossCaseLinks
       ] = await Promise.all([
         fetch(`${baseUrl}/cases`),
         fetch(`${baseUrl}/entities`),
         fetch(`${baseUrl}/evidence`),
         fetch(`${baseUrl}/network`),
         fetch(`${baseUrl}/locations`),
-        fetch(`${baseUrl}/alerts`)
+        fetch(`${baseUrl}/alerts`),
+        fetch(`${baseUrl}/cross-case-links`)
       ]);
 
-      if (!resCases.ok || !resEntities.ok || !resEvidence.ok || !resNetwork.ok || !resLocations.ok || !resAlerts.ok) {
+      if (!resCases.ok || !resEntities.ok || !resEvidence.ok || !resNetwork.ok || !resLocations.ok || !resAlerts.ok || !resCrossCaseLinks.ok) {
         throw new Error('Failed to fetch data from backend APIs.');
       }
 
-      const [dataCases, dataEntities, dataEvidence, dataNetwork, dataLocations, dataAlerts] = await Promise.all([
+      const [dataCases, dataEntities, dataEvidence, dataNetwork, dataLocations, dataAlerts, dataCrossCaseLinks] = await Promise.all([
         resCases.json(),
         resEntities.json(),
         resEvidence.json(),
         resNetwork.json(),
         resLocations.json(),
-        resAlerts.json()
+        resAlerts.json(),
+        resCrossCaseLinks.json()
       ]);
 
       setCases(dataCases);
@@ -85,6 +91,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setNetworkEdges(dataNetwork.edges);
       setLocations(dataLocations);
       setAlerts(dataAlerts);
+      setCrossCaseLinks(dataCrossCaseLinks);
 
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
@@ -173,6 +180,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       networkEdges,
       locations,
       alerts,
+      crossCaseLinks,
       loading,
       error,
       refreshData: fetchData,
@@ -190,7 +198,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useData = () => {
   const context = useContext(DataContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useData must be used within a DataProvider');
   }
   return context;

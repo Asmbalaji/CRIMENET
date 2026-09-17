@@ -1,4 +1,4 @@
-import { InvestigationCase, Suspect, EvidenceItem, NetworkNode, NetworkEdge } from '../data/mockData';
+import { InvestigationCase, Suspect, EvidenceItem, NetworkNode, NetworkEdge, CrossCaseLink } from '../data/mockData';
 
 export interface GraphData {
   nodes: NetworkNode[];
@@ -9,6 +9,7 @@ export function buildNetworkFromCases(
   cases: InvestigationCase[],
   suspects: Suspect[],
   evidence: EvidenceItem[],
+  crossCaseLinks: CrossCaseLink[] = [],
   selectedCaseId: string = 'ALL'
 ): GraphData {
   // 1. Filter cases
@@ -118,6 +119,40 @@ export function buildNetworkFromCases(
       });
     });
   });
+
+  // Cross-Case AI Links
+  if (crossCaseLinks) {
+    crossCaseLinks.forEach(link => {
+      if (link.status === 'VERIFIED') {
+        const sourceCase = cases.find(c => c.id === link.sourceCaseId);
+        const targetCase = cases.find(c => c.id === link.targetCaseId);
+        
+        if (sourceCase && targetCase) {
+          // If the link has a specific supporting entity, link that entity
+          if (link.supportingEntityId && nodeMap.has(link.supportingEntityId)) {
+            // Find another suspect in the target case to link to?
+            // Usually cross-case links with a supporting entity mean that entity is the bridge.
+            // But we don't have case nodes in the graph currently, we only have suspect nodes.
+            // Let's create an edge between the supporting entity and all suspects in the target case.
+            targetCase.suspectIds.forEach(targetSuspectId => {
+              if (link.supportingEntityId !== targetSuspectId && nodeMap.has(targetSuspectId)) {
+                addEdge(link.supportingEntityId as string, targetSuspectId, link.relationshipType as any, targetCase.id, 1);
+              }
+            });
+          } else {
+            // If no specific entity, link all suspects in source case to all suspects in target case
+            sourceCase.suspectIds.forEach(sourceSuspectId => {
+              targetCase.suspectIds.forEach(targetSuspectId => {
+                if (sourceSuspectId !== targetSuspectId && nodeMap.has(sourceSuspectId) && nodeMap.has(targetSuspectId)) {
+                  addEdge(sourceSuspectId, targetSuspectId, link.relationshipType as any, link.targetCaseId, 1);
+                }
+              });
+            });
+          }
+        }
+      }
+    });
+  }
 
   const edges = Array.from(edgeMap.values()).map(e => ({
     id: e.id,

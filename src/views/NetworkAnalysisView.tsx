@@ -50,7 +50,7 @@ const Widget = ({ value, label, color }: { value: string, label: string, color: 
 
 
 const NetworkAnalysisViewComponent: React.FC<NetworkAnalysisViewProps> = ({ initialSelectedNodeId, onNavigate }) => {
-  const { cases, suspects, evidence } = useData();
+  const { cases, suspects, evidence, crossCaseLinks } = useData();
   const fgRef = useRef<any>();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -85,7 +85,7 @@ const NetworkAnalysisViewComponent: React.FC<NetworkAnalysisViewProps> = ({ init
 
   // Build the network
   const { nodes, edges } = useMemo(() => {
-    const data = buildNetworkFromCases(cases, suspects, evidence, 'ALL');
+    const data = buildNetworkFromCases(cases, suspects, evidence, crossCaseLinks, 'ALL');
     const coreNodes = data.nodes;
     const finalNodes: any[] = [];
     const finalEdges = [...data.edges];

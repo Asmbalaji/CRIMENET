@@ -12,6 +12,7 @@ import {
   Settings,
   Shield,
   Activity,
+  Link
 } from 'lucide-react';
 
 export type ViewId =
@@ -21,6 +22,7 @@ export type ViewId =
   | 'network'
   | 'map'
   | 'ai'
+  | 'cross-case'
   | 'evidence'
   | 'reports'
   | 'alerts'
@@ -47,10 +49,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'cases', label: 'Cases', icon: FolderKanban, badge: '4 Active' },
-    { id: 'suspects', label: 'Suspects', icon: UserX, badge: '6 HVTs' },
+    { id: 'cases', label: 'Cases', icon: FolderKanban },
+    { id: 'suspects', label: 'Suspects', icon: UserX },
     { id: 'network', label: 'Network Analysis', icon: Network, highlight: true },
     { id: 'map', label: 'Crime Map', icon: MapPin },
+    { id: 'cross-case', label: 'Cross-Case Intel', icon: Link, highlight: true },
     { id: 'ai', label: 'AI Investigation', icon: Bot, highlight: true, badge: 'NEXUS' },
     { id: 'evidence', label: 'Evidence', icon: HardDrive },
     { id: 'reports', label: 'Reports', icon: FileText },

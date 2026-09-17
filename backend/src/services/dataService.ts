@@ -20,6 +20,7 @@ let db = {
   locations: SYNTHETIC_CRIME_LOCATIONS,
   alerts: SYNTHETIC_ALERTS,
   networkEdges: SYNTHETIC_NETWORK_EDGES,
+  crossCaseLinks: [] as any[],
 };
 
 const loadDb = () => {
@@ -99,4 +100,21 @@ export const getDashboardMetrics = () => {
     totalLocations: db.locations.length,
     totalRelationships: db.networkEdges.length,
   };
+};
+
+export const getCrossCaseLinks = () => db.crossCaseLinks || [];
+
+export const addCrossCaseLink = (link: any) => {
+  if (!db.crossCaseLinks) db.crossCaseLinks = [];
+  db.crossCaseLinks.push(link);
+  saveDb();
+};
+
+export const updateCrossCaseLinkStatus = (id: string, status: 'VERIFIED' | 'REJECTED') => {
+  if (!db.crossCaseLinks) return;
+  const link = db.crossCaseLinks.find(l => l.id === id);
+  if (link) {
+    link.status = status;
+    saveDb();
+  }
 };

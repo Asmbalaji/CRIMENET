@@ -120,6 +120,21 @@ export interface TacticalAlert {
   evidenceId?: string;
 }
 
+export interface CrossCaseLink {
+  id: string;
+  sourceCaseId: string;
+  targetCaseId: string;
+  reason: string;
+  supportingEntityId?: string;
+  supportingEvidenceId?: string;
+  sourceDocument?: string;
+  sourcePages?: number[];
+  confidence: number;
+  relationshipType: 'SHARED_SUSPECT' | 'SHARED_LOCATION' | 'SHARED_MODUS_OPERANDI' | 'FINANCIAL_LINK' | 'COMMUNICATION_LINK';
+  status: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  createdAt: string;
+}
+
 // ================= SYNTHETIC DEMO DATASET ================= //
 
 export const SYNTHETIC_SUSPECTS: Suspect[] = [];

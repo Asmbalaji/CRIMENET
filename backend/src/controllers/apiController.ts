@@ -161,3 +161,42 @@ export const extractCaseInformation = async (req: Request, res: Response, next: 
     next(error);
   }
 };
+
+import { analyzeCrossCaseLinks } from '../services/crossCaseAiService';
+
+export const getCrossCaseLinks = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json(dataService.getCrossCaseLinks());
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const detectCrossCaseLinks = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const detectedLinks = await analyzeCrossCaseLinks(id);
+    
+    // Save them to db
+    detectedLinks.forEach((link: any) => dataService.addCrossCaseLink(link));
+    
+    res.json({ success: true, count: detectedLinks.length, links: detectedLinks });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyCrossCaseLink = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    if (status !== 'VERIFIED' && status !== 'REJECTED') {
+      res.status(400).json({ success: false, message: 'Invalid status' });
+      return;
+    }
+    dataService.updateCrossCaseLinkStatus(id, status);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -88,7 +88,7 @@ export const EvidenceView: React.FC<EvidenceViewProps> = ({ initialSelectedEvide
                       {item.id}
                     </span>
                     <span className="badge badge-emerald">
-                      CONFIDENCE {item.confidence}
+                      CONFIDENCE {item.confidenceScore}%
                     </span>
                   </div>
 
