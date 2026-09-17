@@ -22,6 +22,8 @@ interface DataContextType {
   refreshData: () => Promise<void>;
   addLocalCase: (c: InvestigationCase) => void;
   addLocalSuspect: (s: Suspect) => void;
+  addLocalEvidence: (e: EvidenceItem) => void;
+  addLocalLocation: (l: CrimeLocation) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
@@ -40,21 +42,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const [localCases, setLocalCases] = useState<InvestigationCase[]>(() => {
-    const saved = localStorage.getItem('localCases');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [localSuspects, setLocalSuspects] = useState<Suspect[]>(() => {
-    const saved = localStorage.getItem('localSuspects');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const baseUrl = 'http://localhost:5000/api';
 
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const baseUrl = 'http://localhost:5000/api';
 
       const [
         resCases,
@@ -104,35 +97,72 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchData();
   }, []);
 
-  const addLocalCase = (c: InvestigationCase) => {
-    const updated = [c, ...localCases];
-    setLocalCases(updated);
-    localStorage.setItem('localCases', JSON.stringify(updated));
+  const addLocalCase = async (c: InvestigationCase) => {
+    try {
+      await fetch(`${baseUrl}/cases`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(c)
+      });
+      fetchData(); // Refresh UI
+    } catch (err) {
+      console.error('Failed to save case', err);
+    }
   };
 
-  const addLocalSuspect = (s: Suspect) => {
-    const updated = [s, ...localSuspects];
-    setLocalSuspects(updated);
-    localStorage.setItem('localSuspects', JSON.stringify(updated));
+  const addLocalSuspect = async (s: Suspect) => {
+    try {
+      await fetch(`${baseUrl}/entities`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(s)
+      });
+      fetchData();
+    } catch (err) {
+      console.error('Failed to save entity', err);
+    }
   };
 
-  const allSuspects = [...localSuspects, ...suspects];
-  const allCases = [...localCases, ...cases];
+  const addLocalEvidence = async (e: EvidenceItem) => {
+    try {
+      await fetch(`${baseUrl}/evidence`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(e)
+      });
+      fetchData();
+    } catch (err) {
+      console.error('Failed to save evidence', err);
+    }
+  };
+
+  const addLocalLocation = async (l: CrimeLocation) => {
+    try {
+      await fetch(`${baseUrl}/locations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(l)
+      });
+      fetchData();
+    } catch (err) {
+      console.error('Failed to save location', err);
+    }
+  };
 
   const filteredSuspects = searchQuery 
-    ? allSuspects.filter(s => 
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        s.alias.toLowerCase().includes(searchQuery.toLowerCase())
+    ? suspects.filter(s => 
+        (s.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (s.alias || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : allSuspects;
+    : suspects;
 
   const filteredCases = searchQuery
-    ? allCases.filter(c =>
-        c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.caseNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.syndicate.toLowerCase().includes(searchQuery.toLowerCase())
+    ? cases.filter(c =>
+        (c.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.caseNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.syndicate || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : allCases;
+    : cases;
 
   return (
     <DataContext.Provider value={{
@@ -148,6 +178,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       refreshData: fetchData,
       addLocalCase,
       addLocalSuspect,
+      addLocalEvidence,
+      addLocalLocation,
       searchQuery,
       setSearchQuery
     }}>

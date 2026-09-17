@@ -31,45 +31,47 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectSuspect,
   onSelectCase,
 }) => {
-  const { suspects, cases, locations, networkNodes } = useData();
+  const { suspects, cases, locations, networkNodes, networkEdges } = useData();
   const highRiskSuspects = suspects.filter((s) => s.riskScore >= 80);
   const activeCases = cases.filter((c) => c.status === 'ACTIVE');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Top Banner Alert Notice */}
-      <div
-        className="glass-panel-glow"
-        style={{
-          padding: '16px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'linear-gradient(90deg, rgba(239,68,68,0.15) 0%, rgba(15,23,42,0.9) 100%)',
-          borderColor: 'rgba(239,68,68,0.4)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ padding: '10px', background: 'rgba(239,68,68,0.2)', borderRadius: '10px' }}>
-            <ShieldAlert size={24} style={{ color: 'var(--accent-red)' }} />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
-              HIGH PRIORITY THREAT ALERT: HVT-001 (VIKRAMADITYA ROY) DETECTED IN CYBER CITY
-            </div>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
-              CDR tower triangulation indicates activity near Sector 62. Cross-referenced with Case SIH-CRIM-2026-091.
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => onNavigate('network', { nodeId: 'SUS-001' })}
-          className="btn btn-danger"
-          style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+      {highRiskSuspects.length > 0 && (
+        <div
+          className="glass-panel-glow"
+          style={{
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'linear-gradient(90deg, rgba(239,68,68,0.15) 0%, rgba(15,23,42,0.9) 100%)',
+            borderColor: 'rgba(239,68,68,0.4)',
+          }}
         >
-          Inspect Network Link <ArrowUpRight size={14} />
-        </button>
-      </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ padding: '10px', background: 'rgba(239,68,68,0.2)', borderRadius: '10px' }}>
+              <ShieldAlert size={24} style={{ color: 'var(--accent-red)' }} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
+                HIGH PRIORITY THREAT ALERT: {highRiskSuspects[0].id} ({highRiskSuspects[0].name.toUpperCase()}) DETECTED
+              </div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                System indicates severe threat potential based on dynamic network analysis.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => onSelectSuspect(highRiskSuspects[0])}
+            className="btn btn-danger"
+            style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+          >
+            Inspect Target <ArrowUpRight size={14} />
+          </button>
+        </div>
+      )}
 
       {/* 4 Statistics Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
@@ -84,10 +86,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
           <div style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-display)', color: '#ffffff' }}>
-            04 <span style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', fontWeight: 500 }}>/ 12 Total</span>
+            {activeCases.length.toString().padStart(2, '0')} <span style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', fontWeight: 500 }}>/ {cases.length} Total</span>
           </div>
           <div style={{ fontSize: '0.725rem', color: 'var(--accent-emerald)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <TrendingUp size={12} /> 2 New cases flagged this week
+            <TrendingUp size={12} /> Sync active
           </div>
         </div>
 
@@ -102,10 +104,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
           <div style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-display)', color: '#ffffff' }}>
-            06 <span style={{ fontSize: '0.85rem', color: 'var(--accent-red)', fontWeight: 500 }}>3 Critical</span>
+            {suspects.length.toString().padStart(2, '0')} <span style={{ fontSize: '0.85rem', color: 'var(--accent-red)', fontWeight: 500 }}>{highRiskSuspects.length} Critical</span>
           </div>
           <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-            100% Synthetic Biometric Records
+            Biometric Records Analyzed
           </div>
         </div>
 
@@ -120,10 +122,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
           <div style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-display)', color: '#ffffff' }}>
-            09 <span style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', fontWeight: 500 }}>8 Inter-links</span>
+            {networkNodes.length.toString().padStart(2, '0')} <span style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', fontWeight: 500 }}>{networkNodes.length > 0 ? 'Inter-links' : 'Empty'}</span>
           </div>
           <div style={{ fontSize: '0.725rem', color: 'var(--accent-cyan)', marginTop: '8px' }}>
-            Graph Centrality Index: 0.84
+            Dynamic Force Graph Status
           </div>
         </div>
 
@@ -138,10 +140,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
           <div style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-display)', color: '#ffffff' }}>
-            05 <span style={{ fontSize: '0.85rem', color: 'var(--accent-amber)', fontWeight: 500 }}>Locations</span>
+            {locations.length.toString().padStart(2, '0')} <span style={{ fontSize: '0.85rem', color: 'var(--accent-amber)', fontWeight: 500 }}>Locations</span>
           </div>
-          <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-            NCR, Mumbai, Ambala, Kolkata, Kochi
+          <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', marginTop: '8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {locations.length > 0 ? locations.map(l => l.city).join(', ') : 'No location data'}
           </div>
         </div>
       </div>
@@ -175,34 +177,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               overflow: 'hidden',
             }}
           >
-            {/* SVG Network Mock Graphic */}
-            <svg width="100%" height="260" style={{ position: 'absolute', inset: 0 }}>
-              {/* Lines */}
-              <line x1="50%" y1="30%" x2="25%" y2="65%" stroke="rgba(0, 240, 255, 0.4)" strokeWidth="2" strokeDasharray="4" />
-              <line x1="50%" y1="30%" x2="75%" y2="65%" stroke="rgba(239, 68, 68, 0.6)" strokeWidth="3" />
-              <line x1="25%" y1="65%" x2="50%" y2="85%" stroke="rgba(59, 130, 246, 0.4)" strokeWidth="2" />
-              <line x1="75%" y1="65%" x2="50%" y2="85%" stroke="rgba(245, 158, 11, 0.4)" strokeWidth="2" />
-
-              {/* Central Leader Node */}
-              <circle cx="50%" cy="30%" r="22" fill="#ef4444" opacity="0.3" className="animate-pulse-slow" />
-              <circle cx="50%" cy="30%" r="14" fill="#ef4444" stroke="#ffffff" strokeWidth="2" />
-              <text x="50%" y="20%" fill="#ffffff" fontSize="11" textAnchor="middle" fontWeight="bold">VIPER (HVT-001)</text>
-
-              {/* Node 2 */}
-              <circle cx="25%" cy="65%" r="10" fill="#00f0ff" stroke="#ffffff" strokeWidth="2" />
-              <text x="25%" y="78%" fill="#cbd5e1" fontSize="10" textAnchor="middle">GHOST (Cyber)</text>
-
-              {/* Node 3 */}
-              <circle cx="75%" cy="65%" r="12" fill="#dc2626" stroke="#ffffff" strokeWidth="2" />
-              <text x="75%" y="78%" fill="#cbd5e1" fontSize="10" textAnchor="middle">BULL (Arms)</text>
-
-              {/* Node 4 */}
-              <circle cx="50%" cy="85%" r="9" fill="#3b82f6" stroke="#ffffff" strokeWidth="2" />
-              <text x="50%" y="96%" fill="#cbd5e1" fontSize="10" textAnchor="middle">SHADOW (CDR)</text>
-            </svg>
+            {networkNodes.length === 0 ? (
+              <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff', marginBottom: '8px' }}>NO VERIFIED NETWORK RELATIONSHIPS</div>
+                <div style={{ fontSize: '0.75rem' }}>Create a case with verified entity relationships to populate Network Analysis.</div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff', marginBottom: '8px' }}>{networkNodes.length} NODES & {networkEdges.length} EDGES DYNAMICALLY LOADED</div>
+                <div style={{ fontSize: '0.75rem' }}>Click "Full Interactive Graph" to open Analysis.</div>
+              </div>
+            )}
 
             <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(10,15,29,0.85)', padding: '4px 10px', borderRadius: '6px', fontSize: '0.7rem', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
-              ● 9 Syndicate Nodes • 8 Cross-Links • Synthetic Topology
+              ● {networkNodes.length} Network Entities • {networkEdges.length} Relations • Dynamic Topology
             </div>
           </div>
         </div>
@@ -260,7 +248,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             ))}
 
             <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(10,15,29,0.85)', padding: '4px 10px', borderRadius: '6px', fontSize: '0.7rem', color: 'var(--accent-amber)', fontFamily: 'var(--font-mono)' }}>
-              5 Hotspots Mapped across India
+              {locations.length} Hotspots Mapped
             </div>
           </div>
         </div>
@@ -276,67 +264,74 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span>High-Risk Entities Watchlist</span>
             </div>
             <button onClick={() => onNavigate('suspects')} className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '4px 10px' }}>
-              View All (6)
+              View All ({suspects.length})
             </button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {highRiskSuspects.map((suspect) => (
-              <div
-                key={suspect.id}
-                onClick={() => onNavigate('suspects', { suspect })}
-                style={{
-                  padding: '12px',
-                  borderRadius: '10px',
-                  background: 'rgba(15, 23, 42, 0.8)',
-                  border: '1px solid var(--border-subtle)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--accent-cyan)')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '10px',
-                      background: suspect.avatarColor,
-                      color: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                      fontSize: '0.9rem',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  >
-                    {suspect.name.substring(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff' }}>
-                      {suspect.name} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({suspect.alias})</span>
-                    </div>
-                    <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                      {suspect.role} • {suspect.syndicate}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <span className={suspect.threatLevel === 'CRITICAL' ? 'badge badge-critical' : 'badge badge-high'}>
-                    RISK {suspect.riskScore}%
-                  </span>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
-                    {suspect.status}
-                  </div>
-                </div>
+            {highRiskSuspects.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#ffffff', marginBottom: '4px' }}>NO VERIFIED ENTITIES</div>
+                <div style={{ fontSize: '0.7rem' }}>Upload and verify a case document to identify suspects.</div>
               </div>
-            ))}
+            ) : (
+              highRiskSuspects.map((suspect) => (
+                <div
+                  key={suspect.id}
+                  onClick={() => onNavigate('suspects', { suspect })}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '10px',
+                    background: 'rgba(15, 23, 42, 0.8)',
+                    border: '1px solid var(--border-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--accent-cyan)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        background: suspect.avatarColor,
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
+                        fontFamily: 'var(--font-mono)',
+                      }}
+                    >
+                      {suspect.name.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff' }}>
+                        {suspect.name} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({suspect.alias})</span>
+                      </div>
+                      <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                        {suspect.role} • {suspect.syndicate}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <span className={suspect.threatLevel === 'CRITICAL' ? 'badge badge-critical' : 'badge badge-high'}>
+                      RISK {suspect.riskScore}%
+                    </span>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+                      {suspect.status}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -353,41 +348,48 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {activeCases.map((c) => (
-              <div
-                key={c.id}
-                onClick={() => onNavigate('cases', { case: c })}
-                style={{
-                  padding: '14px',
-                  borderRadius: '10px',
-                  background: 'rgba(15, 23, 42, 0.8)',
-                  border: '1px solid var(--border-subtle)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--accent-blue)')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-                    {c.caseNumber}
-                  </span>
-                  <span className={c.severity === 'CRITICAL' ? 'badge badge-critical' : 'badge badge-high'}>
-                    {c.severity}
-                  </span>
-                </div>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#ffffff', marginBottom: '4px' }}>
-                  {c.title}
-                </h4>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                  {c.summary}
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px', fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                  <span>Officer: {c.leadOfficer}</span>
-                  <span>{c.evidenceCount} Evidence files</span>
-                </div>
+            {activeCases.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#ffffff', marginBottom: '4px' }}>NO INVESTIGATION CASES AVAILABLE</div>
+                <div style={{ fontSize: '0.7rem' }}>Upload and verify a case document to create a case.</div>
               </div>
-            ))}
+            ) : (
+              activeCases.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => onNavigate('cases', { case: c })}
+                  style={{
+                    padding: '14px',
+                    borderRadius: '10px',
+                    background: 'rgba(15, 23, 42, 0.8)',
+                    border: '1px solid var(--border-subtle)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--accent-blue)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+                      {c.caseNumber}
+                    </span>
+                    <span className={c.severity === 'CRITICAL' ? 'badge badge-critical' : 'badge badge-high'}>
+                      {c.severity}
+                    </span>
+                  </div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#ffffff', marginBottom: '4px' }}>
+                    {c.title}
+                  </h4>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {c.summary}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px', fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    <span>Officer: {c.leadOfficer}</span>
+                    <span>{c.evidenceCount} Evidence files</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

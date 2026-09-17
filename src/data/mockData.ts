@@ -81,18 +81,23 @@ export interface CrimeLocation {
   id: string;
   title: string;
   city: string;
-  lat: number;
-  lng: number;
-  type: 'NARCOTICS_HUB' | 'CYBER_ATTACK' | 'HAWALA_CENTER' | 'ARMS_CACHE' | 'EXTORTION_SITE';
+  district?: string;
+  state?: string;
+  lat: number | null;
+  lng: number | null;
+  type: 'NARCOTICS_HUB' | 'CYBER_ATTACK' | 'HAWALA_CENTER' | 'ARMS_CACHE' | 'EXTORTION_SITE' | 'GENERAL_LOCATION';
   threatLevel: 'CRITICAL' | 'HIGH' | 'MEDIUM';
   timestamp: string;
   caseId: string;
+  sourceEvidenceId?: string;
+  sourcePages?: number[];
+  verified?: boolean;
 }
 
 export interface EvidenceItem {
   id: string;
   title: string;
-  category: 'CDR_LOG' | 'FINANCIAL_LEDGER' | 'ENCRYPTED_TEXT' | 'CCTV_SNIPPET' | 'BIOMETRIC_FILE';
+  category: 'CDR_LOG' | 'FINANCIAL_LEDGER' | 'ENCRYPTED_TEXT' | 'CCTV_SNIPPET' | 'BIOMETRIC_FILE' | 'DOCUMENT';
   timestamp: string;
   source: string;
   confidenceScore: number;
@@ -115,9 +120,36 @@ export interface TacticalAlert {
   evidenceId?: string;
 }
 
+// ================= SYNTHETIC DEMO DATASET ================= //
+
+export const SYNTHETIC_SUSPECTS: Suspect[] = [];
+
+export const SYNTHETIC_CASES: InvestigationCase[] = [];
+
+export const SYNTHETIC_NETWORK_NODES: NetworkNode[] = [];
+
+export const SYNTHETIC_NETWORK_EDGES: NetworkEdge[] = [];
+
+export const SYNTHETIC_CRIME_LOCATIONS: CrimeLocation[] = [];
+
+export const SYNTHETIC_EVIDENCE: EvidenceItem[] = [];
+
+export const SYNTHETIC_ALERTS: TacticalAlert[] = [];
+
 export const AI_PROMPT_SUGGESTIONS = [
-  'Analyze connections between Vikramaditya Roy and Hawala shell accounts.',
-  'Identify top 3 central nodes in Syndicate Alpha network.',
-  'Predict potential location of next weapons shipment based on ANPR trends.',
-  'Summarize evidence timeline for Case SIH-CRIM-2026-091.',
+  'Analyze connections between recently added suspects.',
+  'Identify top 3 central nodes in the active network.',
+  'Summarize evidence timeline for current active case.',
 ];
+
+export const SYNTHETIC_AI_RESPONSES: Record<string, any> = {
+  'default': {
+    answer: "No verified investigation data is currently available for analysis.",
+    keyEntities: [],
+    detectedPattern: "Insufficient data.",
+    supportingEvidence: [],
+    confidence: 0,
+    nextStep: "Upload and verify a case document to begin analysis."
+  }
+};
+

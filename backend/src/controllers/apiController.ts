@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as dataService from '../services/dataService';
+import * as geocodeService from '../services/geocodeService';
 
 export const getCases = (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -49,7 +50,62 @@ export const getAlerts = (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-import { analyzeQuery } from '../services/aiService';
+export const getDashboardMetrics = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json(dataService.getDashboardMetrics());
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createCase = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    dataService.addCase(req.body);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createEntity = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    dataService.addEntity(req.body);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createEvidence = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    dataService.addEvidence(req.body);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createLocation = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const location = req.body;
+    
+    // Check if we need geocoding
+    if (location.lat === null || location.lng === null) {
+      const geoResult = await geocodeService.geocodeLocation(location.city, location.state);
+      if (geoResult) {
+        location.lat = geoResult.lat;
+        location.lng = geoResult.lng;
+      }
+    }
+    
+    dataService.addLocation(location);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+import { analyzeQuery, extractFIRData } from '../services/aiService';
 
 export const analyzeAi = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -68,6 +124,39 @@ export const analyzeAi = async (req: Request, res: Response, next: NextFunction)
 export const getAi = (req: Request, res: Response, next: NextFunction) => {
   try {
     res.json(dataService.getAiResponse());
+  } catch (error) {
+    next(error);
+  }
+};
+
+import pdfParse from 'pdf-parse';
+
+export const extractCaseInformation = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ success: false, message: 'No file uploaded' });
+      return;
+    }
+
+    let extractedText = '';
+
+    if (req.file.mimetype === 'application/pdf') {
+      const data = await (pdfParse as any)(req.file.buffer);
+      extractedText = data.text;
+    } else if (req.file.mimetype === 'text/plain') {
+      extractedText = req.file.buffer.toString('utf-8');
+    } else {
+      res.status(400).json({ success: false, message: 'Unsupported file type. Please upload a PDF or TXT.' });
+      return;
+    }
+
+    if (!extractedText.trim()) {
+      res.status(400).json({ success: false, message: 'Unable to extract readable text from this document.' });
+      return;
+    }
+
+    const aiResult = await extractFIRData(extractedText);
+    res.json({ success: true, data: aiResult });
   } catch (error) {
     next(error);
   }

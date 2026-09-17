@@ -58,10 +58,10 @@ export const SuspectsView: React.FC<SuspectsViewProps> = ({ selectedSuspect, onS
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 700, color: '#ffffff' }}>
-            Suspects & High-Value Targets (HVTs)
+            Suspects & Entities
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            SYNTHETIC IDENTITY DATABASE • 6 TRACKED INDIVIDUALS
+            DATABASE • {suspects.length} TRACKED INDIVIDUALS
           </p>
         </div>
 
@@ -93,11 +93,18 @@ export const SuspectsView: React.FC<SuspectsViewProps> = ({ selectedSuspect, onS
       </div>
 
       {/* Grid of Suspect Profiles */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
-        {filteredSuspects.map((suspect) => {
-          const displayName = getDisplayName(suspect);
-          return (
-          <div
+      {filteredSuspects.length === 0 ? (
+        <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <UserX size={48} style={{ margin: '0 auto 16px auto', opacity: 0.5 }} />
+          <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '8px' }}>No entities tracked</h3>
+          <p>Upload and verify a case document to extract entities and suspects.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
+          {filteredSuspects.map((suspect) => {
+            const displayName = getDisplayName(suspect);
+            return (
+            <div
             key={suspect.id}
             className="glass-panel"
             style={{
@@ -199,7 +206,8 @@ export const SuspectsView: React.FC<SuspectsViewProps> = ({ selectedSuspect, onS
           </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Suspect Detail Modal Drawer */}
       {selectedSuspect && (

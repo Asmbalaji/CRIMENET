@@ -15,9 +15,11 @@ import {
   X,
   UploadCloud,
   File as FileIcon,
+  Loader2,
 } from 'lucide-react';
 import { InvestigationCase } from '../data/mockData';
 import { useData } from '../context/DataContext';
+import { CaseVerificationModal } from '../components/CaseVerificationModal';
 import { ViewId } from '../components/Sidebar';
 
 interface CasesViewProps {
@@ -27,7 +29,7 @@ interface CasesViewProps {
 }
 
 export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase, onNavigate }) => {
-  const { cases, suspects, addLocalCase, addLocalSuspect } = useData();
+  const { cases, suspects, addLocalCase, addLocalSuspect, addLocalEvidence, addLocalLocation } = useData();
   const [caseDocuments, setCaseDocuments] = useState<Record<string, {name: string, type: string}>>({});
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,6 +43,9 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
   const [newSyndicate, setNewSyndicate] = useState('');
   const [newSeverity, setNewSeverity] = useState('HIGH');
   const [newSummary, setNewSummary] = useState('');
+
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractedData, setExtractedData] = useState<any>(null);
 
   const filteredCases = cases.filter((c) => {
     const matchesSearch =
@@ -71,6 +76,32 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
     }
     
     setUploadedDocument(file);
+  };
+
+  const handleExtractData = async () => {
+    if (!uploadedDocument) return;
+    setIsExtracting(true);
+    setUploadError('');
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadedDocument);
+
+      const response = await fetch('http://localhost:5000/api/cases/extract', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setExtractedData(data.data);
+      } else {
+        setUploadError(data.message || 'AI extraction failed.');
+      }
+    } catch (err) {
+      setUploadError('Network error while extracting document data.');
+    } finally {
+      setIsExtracting(false);
+    }
   };
 
   const handleCreateCase = () => {
@@ -131,6 +162,104 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
     setIsNewCaseModalOpen(false);
   };
 
+  const handleConfirmVerifiedData = (verifiedData: any) => {
+    // Check duplicates
+    if (cases.some(c => c.caseNumber === verifiedData.case?.caseNumber || c.firNumber === verifiedData.case?.firNumber)) {
+      if (!window.confirm("Possible duplicate case detected. Continue anyway?")) {
+        return;
+      }
+    }
+
+    const newCaseId = `SIH-CRIM-2026-${Math.floor(Math.random() * 1000)}`;
+    const suspectIds: string[] = [];
+    const newEvidenceId = uploadedDocument ? `EV-EXT-${Math.floor(Math.random() * 10000)}` : undefined;
+
+    // Create suspects
+    if (verifiedData.persons && verifiedData.persons.length > 0) {
+      verifiedData.persons.forEach((person: any) => {
+        const id = `SUS-EXT-${Math.floor(Math.random() * 10000)}`;
+        suspectIds.push(id);
+        addLocalSuspect({
+          id,
+          name: person.name || 'Unknown',
+          alias: person.aliases?.[0] || 'Unknown',
+          threatLevel: person.role?.toLowerCase() === 'accused' ? 'HIGH' : 'MEDIUM',
+          riskScore: person.role?.toLowerCase() === 'accused' ? 75 : 30,
+          syndicate: 'Unknown',
+          role: person.role || 'Unknown',
+          status: 'PERSON OF INTEREST',
+          lastKnownLocation: 'Unknown',
+          phone: 'Unknown',
+          avatarColor: '#10b981', // green for extracted
+          biometrics: { dnaMatched: false, facialMatchScore: 0, fingerprintRegistered: false },
+          associatedCaseIds: [newCaseId],
+          riskFactors: { centrality: 10, severity: 20, communication: 0, financial: 0, location: 0 }
+        });
+      });
+    }
+
+    // Create locations
+    if (verifiedData.locations && verifiedData.locations.length > 0) {
+      verifiedData.locations.forEach((loc: any) => {
+        addLocalLocation({
+          id: `LOC-EXT-${Math.floor(Math.random() * 10000)}`,
+          caseId: newCaseId,
+          title: loc.name || 'Unknown Location',
+          city: loc.city || 'Unknown City',
+          district: loc.district || undefined,
+          state: loc.state || undefined,
+          lat: null, // Geocoded on backend
+          lng: null,
+          type: 'GENERAL_LOCATION',
+          threatLevel: (newSeverity as 'CRITICAL' | 'HIGH' | 'MEDIUM') || 'MEDIUM',
+          timestamp: new Date().toISOString(),
+          sourcePages: loc.sourcePages || [],
+          sourceEvidenceId: newEvidenceId,
+          verified: true
+        });
+      });
+    }
+
+    const newCase: InvestigationCase = {
+      id: newCaseId,
+      caseNumber: verifiedData.case?.caseNumber || `OP-${Math.floor(Math.random() * 10000)}`,
+      firNumber: verifiedData.case?.firNumber || undefined,
+      title: verifiedData.case?.caseTitle || newTitle || 'Untitled Case',
+      status: "ACTIVE",
+      severity: "HIGH",
+      dateOpened: verifiedData.case?.firDate || new Date().toISOString().split('T')[0],
+      leadOfficer: "Agent Synthetic",
+      syndicate: "Unknown",
+      suspectIds: suspectIds,
+      location: verifiedData.case?.district ? `${verifiedData.case.district}, ${verifiedData.case.state}` : "Unknown Location",
+      evidenceCount: verifiedData.evidence?.length || (uploadedDocument ? 1 : 0),
+      summary: verifiedData.summary || newSummary || "No summary provided.",
+      isPublicRecord: false
+    };
+
+    if (uploadedDocument && newEvidenceId) {
+      setCaseDocuments(prev => ({ ...prev, [newCase.id]: { name: uploadedDocument.name, type: uploadedDocument.type } }));
+      // Generate Evidence Record
+      addLocalEvidence({
+        id: newEvidenceId,
+        caseId: newCaseId,
+        title: uploadedDocument.name,
+        category: 'DOCUMENT',
+        timestamp: new Date().toISOString(),
+        source: 'PDF Upload',
+        confidenceScore: 100,
+        summary: `Uploaded FIR/Case document automatically generated by extraction process.`,
+        metadata: { type: uploadedDocument.type }
+      });
+    }
+
+    addLocalCase(newCase);
+    setExtractedData(null);
+    setUploadedDocument(null);
+    setUploadError('');
+    setIsNewCaseModalOpen(false);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Header Actions */}
@@ -140,7 +269,7 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
             Investigation Case Files
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            4 ACTIVE LAW ENFORCEMENT DOSSIERS • SYNTHETIC DATABASE
+            {cases.length} ACTIVE LAW ENFORCEMENT DOSSIERS
           </p>
         </div>
 
@@ -178,130 +307,142 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
         </div>
       </div>
 
-      {/* Public Cases Grid */}
-      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 600, color: '#ffffff', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px', marginTop: '16px' }}>
-        Publicly Documented Criminal Cases
-      </h3>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
-        {filteredCases.filter(c => c.isPublicRecord).map((c) => (
-          <div
-            key={c.id}
-            className="glass-panel"
-            style={{
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              gap: '16px',
-              border: selectedCase?.id === c.id ? '1px solid var(--border-cyan)' : '1px solid var(--border-subtle)',
-              boxShadow: selectedCase?.id === c.id ? '0 0 15px var(--accent-cyan-glow)' : 'none',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-            onClick={() => onSelectCase(c)}
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
-                  {c.isPublicRecord ? 'PUBLIC CASE • ' : ''}{c.caseNumber}
-                </span>
-                <span className={c.status === 'CONVICTED' || c.status === 'CONVICTION CONFIRMED' ? 'badge badge-critical' : c.status === 'ACQUITTED' ? 'badge badge-medium' : 'badge badge-high'}>
-                  {c.status}
-                </span>
-              </div>
-
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff', marginBottom: '8px', lineHeight: 1.3 }}>
-                {c.title}
-              </h3>
-
-              <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>
-                {c.isPublicRecord ? (
-                  <>Location: <strong>{c.district}</strong></>
-                ) : (
-                  <>Target Syndicate: <strong>{c.syndicate}</strong></>
-                )}
-              </div>
-
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '16px' }}>
-                {c.summary}
-              </p>
-            </div>
-
-            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.725rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Shield size={14} style={{ color: 'var(--accent-blue)' }} />
-                <span>{c.leadOfficer}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)' }}>
-                <span>Inspect Dossier</span> <ArrowRight size={14} />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Synthetic Demo Grid */}
-      {filteredCases.some(c => !c.isPublicRecord) && (
+      {filteredCases.length === 0 ? (
+        <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <FolderKanban size={48} style={{ margin: '0 auto 16px auto', opacity: 0.5 }} />
+          <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '8px' }}>No investigation cases available</h3>
+          <p>Upload and verify a case document to create a case.</p>
+        </div>
+      ) : (
         <>
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 600, color: '#ffffff', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px', marginTop: '32px' }}>
-            Synthetic Demonstration Dataset
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
-            {filteredCases.filter(c => !c.isPublicRecord).map((c) => (
-              <div
-                key={c.id}
-                className="glass-panel"
-                style={{
-                  padding: '24px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '16px',
-                  border: selectedCase?.id === c.id ? '1px solid var(--border-cyan)' : '1px solid var(--border-subtle)',
-                  boxShadow: selectedCase?.id === c.id ? '0 0 15px var(--accent-cyan-glow)' : 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-                onClick={() => onSelectCase(c)}
-              >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
-                      {c.caseNumber}
-                    </span>
-                    <span className={c.status === 'ACTIVE' ? 'badge badge-critical' : 'badge badge-high'}>
-                      {c.status}
-                    </span>
-                  </div>
+          {filteredCases.some(c => c.isPublicRecord) && (
+            <>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 600, color: '#ffffff', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px', marginTop: '16px' }}>
+                Publicly Documented Criminal Cases
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+                {filteredCases.filter(c => c.isPublicRecord).map((c) => (
+                  <div
+                    key={c.id}
+                    className="glass-panel"
+                    style={{
+                      padding: '24px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '16px',
+                      border: selectedCase?.id === c.id ? '1px solid var(--border-cyan)' : '1px solid var(--border-subtle)',
+                      boxShadow: selectedCase?.id === c.id ? '0 0 15px var(--accent-cyan-glow)' : 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onClick={() => onSelectCase(c)}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
+                          {c.isPublicRecord ? 'PUBLIC CASE • ' : ''}{c.caseNumber}
+                        </span>
+                        <span className={c.status === 'CONVICTED' || c.status === 'CONVICTION CONFIRMED' ? 'badge badge-critical' : c.status === 'ACQUITTED' ? 'badge badge-medium' : 'badge badge-high'}>
+                          {c.status}
+                        </span>
+                      </div>
 
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff', marginBottom: '8px', lineHeight: 1.3 }}>
-                    {c.title}
-                  </h3>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff', marginBottom: '8px', lineHeight: 1.3 }}>
+                        {c.title}
+                      </h3>
 
-                  <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>
-                    Target Syndicate: <strong>{c.syndicate}</strong>
-                  </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>
+                        {c.isPublicRecord ? (
+                          <>Location: <strong>{c.district}</strong></>
+                        ) : (
+                          <>Target Syndicate: <strong>{c.syndicate}</strong></>
+                        )}
+                      </div>
 
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '16px' }}>
-                    {c.summary}
-                  </p>
-                </div>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '16px' }}>
+                        {c.summary}
+                      </p>
+                    </div>
 
-                <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.725rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Shield size={14} style={{ color: 'var(--accent-blue)' }} />
-                    <span>{c.leadOfficer}</span>
+                    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.725rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Shield size={14} style={{ color: 'var(--accent-blue)' }} />
+                        <span>{c.leadOfficer}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)' }}>
+                        <span>Inspect Dossier</span> <ArrowRight size={14} />
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)' }}>
-                    <span>Inspect Dossier</span> <ArrowRight size={14} />
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
+
+          {filteredCases.some(c => !c.isPublicRecord) && (
+            <>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 600, color: '#ffffff', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px', marginTop: '32px' }}>
+                Investigation Cases
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+                {filteredCases.filter(c => !c.isPublicRecord).map((c) => (
+                  <div
+                    key={c.id}
+                    className="glass-panel"
+                    style={{
+                      padding: '24px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '16px',
+                      border: selectedCase?.id === c.id ? '1px solid var(--border-cyan)' : '1px solid var(--border-subtle)',
+                      boxShadow: selectedCase?.id === c.id ? '0 0 15px var(--accent-cyan-glow)' : 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onClick={() => onSelectCase(c)}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
+                          {c.caseNumber}
+                        </span>
+                        <span className={c.status === 'ACTIVE' ? 'badge badge-critical' : 'badge badge-high'}>
+                          {c.status}
+                        </span>
+                      </div>
+
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff', marginBottom: '8px', lineHeight: 1.3 }}>
+                        {c.title}
+                      </h3>
+
+                      <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>
+                        Target Syndicate: <strong>{c.syndicate}</strong>
+                      </div>
+
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '16px' }}>
+                        {c.summary}
+                      </p>
+                    </div>
+
+                    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.725rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Shield size={14} style={{ color: 'var(--accent-blue)' }} />
+                        <span>{c.leadOfficer}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)' }}>
+                        <span>Inspect Dossier</span> <ArrowRight size={14} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
-      
+
       <div style={{ marginTop: '32px', padding: '16px', borderTop: '1px solid var(--border-subtle)', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', fontFamily: 'var(--font-mono)' }}>
         <Shield size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px', color: 'var(--accent-cyan)' }} />
         Public Case Records — Information reproduced from publicly available judicial/government sources. CRIMENET analysis is for demonstration and does not constitute a finding of guilt.
@@ -746,10 +887,30 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
               <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setIsNewCaseModalOpen(false)}>Cancel</button>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleCreateCase} disabled={!newTitle}>Open Case</button>
+              {uploadedDocument ? (
+                <button 
+                  className="btn btn-primary" 
+                  style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }} 
+                  onClick={handleExtractData} 
+                  disabled={isExtracting}
+                >
+                  {isExtracting ? <Loader2 size={16} className="radar-spinner" /> : <CheckCircle2 size={16} />}
+                  {isExtracting ? 'Extracting...' : 'Extract & Analyze Document'}
+                </button>
+              ) : (
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleCreateCase} disabled={!newTitle}>Open Case</button>
+              )}
             </div>
           </div>
         </div>
+      )}
+
+      {extractedData && (
+        <CaseVerificationModal
+          extractedData={extractedData}
+          onConfirm={handleConfirmVerifiedData}
+          onCancel={() => setExtractedData(null)}
+        />
       )}
     </div>
   );

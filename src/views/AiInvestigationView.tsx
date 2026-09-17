@@ -29,7 +29,7 @@ export const AiInvestigationView: React.FC<AiInvestigationViewProps> = ({ onNavi
     {
       id: '1',
       sender: 'NEXUS',
-      text: 'NEXUS-AI Neural Intelligence System online. Initialized on Synthetic Case Datasets SIH26189. How can I assist your investigation today?',
+      text: 'NEXUS-AI Neural Intelligence System online. Ready to analyze verified investigation records. How can I assist you today?',
       timestamp: '13:40',
     },
   ]);

@@ -19,7 +19,7 @@ export const CrimeMapView: React.FC<CrimeMapViewProps> = ({ initialSelectedLocat
   const [showHeatmap, setShowHeatmap] = useState(true);
 
   const filteredLocations = locations.filter(
-    (loc) => typeFilter === 'ALL' || loc.type === typeFilter
+    (loc) => typeFilter === 'ALL' || loc.caseId === typeFilter
   );
 
   return (
@@ -31,7 +31,7 @@ export const CrimeMapView: React.FC<CrimeMapViewProps> = ({ initialSelectedLocat
             Geospatial Crime Intelligence & Threat Hotspots
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            NATIONAL HOTSPOT HEATMAP • SPATIAL INCIDENT CLUSTER ANALYSIS
+            DYNAMIC INVESTIGATION HOTSPOTS • SPATIAL EVENT MAPPING
           </p>
         </div>
 
@@ -50,11 +50,10 @@ export const CrimeMapView: React.FC<CrimeMapViewProps> = ({ initialSelectedLocat
             onChange={(e) => setTypeFilter(e.target.value)}
             style={{ width: '200px', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
           >
-            <option value="ALL">All Crime Types</option>
-            <option value="CYBER_ATTACK">Cyber Attack Hub</option>
-            <option value="HAWALA_CENTER">Hawala Center</option>
-            <option value="ARMS_CACHE">Arms Cache Corridor</option>
-            <option value="NARCOTICS_HUB">Narcotics Hub</option>
+            <option value="ALL">All Cases</option>
+            {cases.map(c => (
+              <option key={c.id} value={c.id}>{c.title || c.caseNumber}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -83,6 +82,8 @@ export const CrimeMapView: React.FC<CrimeMapViewProps> = ({ initialSelectedLocat
               className="map-tiles-dark"
             />
             {filteredLocations.map((loc) => {
+              if (loc.lat === null || loc.lng === null) return null;
+
               const isSelected = selectedLocation?.id === loc.id;
               const isCritical = loc.threatLevel === 'CRITICAL';
               const color = isCritical ? '#ef4444' : '#f59e0b';
@@ -130,61 +131,59 @@ export const CrimeMapView: React.FC<CrimeMapViewProps> = ({ initialSelectedLocat
         <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
           <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '12px' }}>
             <div className="card-title" style={{ fontSize: '1rem', color: 'var(--accent-amber)' }}>
-              <MapPin size={18} /> Hotspot Details
+              <MapPin size={18} /> Location Details
             </div>
-            <p style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              Select map pin to inspect spatial intelligence
+            <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '8px', lineHeight: 1.4 }}>
+              Map indicators represent activity in verified investigation records and are not determinations of guilt or inherent danger.
             </p>
           </div>
 
-          {selectedLocation ? (
+          {filteredLocations.length === 0 ? (
+             <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
+               <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff', marginBottom: '8px' }}>NO VERIFIED LOCATIONS</div>
+               <div style={{ fontSize: '0.75rem' }}>Upload and verify a case document containing location information to populate the map.</div>
+             </div>
+          ) : selectedLocation ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <span className={selectedLocation.threatLevel === 'CRITICAL' ? 'badge badge-critical' : 'badge badge-high'} style={{ marginBottom: '8px' }}>
-                  THREAT: {selectedLocation.threatLevel}
+                  ANALYTICAL CASE PRIORITY: {selectedLocation.threatLevel}
                 </span>
                 <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#ffffff' }}>
                   {selectedLocation.title}
                 </h3>
                 <div style={{ fontSize: '0.8rem', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
-                  Location: {selectedLocation.city}
+                  {selectedLocation.city}{selectedLocation.district ? `, ${selectedLocation.district}` : ''}{selectedLocation.state ? `, ${selectedLocation.state}` : ''}
                 </div>
               </div>
 
               <div style={{ padding: '12px', background: 'rgba(10,15,29,0.8)', borderRadius: '8px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
-                <div><span style={{ color: 'var(--text-muted)' }}>GPS Coordinates:</span> <span style={{ color: '#ffffff' }}>{selectedLocation.lat && selectedLocation.lng ? `${selectedLocation.lat} N, ${selectedLocation.lng} E` : 'UNKNOWN'}</span></div>
-                <div><span style={{ color: 'var(--text-muted)' }}>Crime Category:</span> <span style={{ color: 'var(--accent-amber)' }}>{selectedLocation.type || 'UNKNOWN'}</span></div>
-                <div><span style={{ color: 'var(--text-muted)' }}>Timestamp:</span> <span style={{ color: '#ffffff' }}>{selectedLocation.timestamp || 'UNKNOWN'}</span></div>
-                <div><span style={{ color: 'var(--text-muted)' }}>Associated Case:</span> <span style={{ color: 'var(--accent-cyan)' }}>{selectedLocation.caseId || 'UNKNOWN'}</span></div>
-                <div><span style={{ color: 'var(--text-muted)' }}>Primary Suspect:</span> <span style={{ color: 'var(--accent-red)' }}>
-                  {(() => {
-                     const caseData = cases.find(c => c.id === selectedLocation.caseId);
-                     const suspect = caseData ? suspects.find(s => caseData.suspectIds.includes(s.id)) : null;
-                     return suspect ? suspect.name : 'UNKNOWN';
-                  })()}
-                </span></div>
+                <div style={{ color: 'var(--text-muted)', marginBottom: '4px' }}>LINKED CASES</div>
+                <div style={{ color: 'var(--accent-cyan)' }}>{selectedLocation.caseId || 'UNKNOWN'}</div>
+                
+                <div style={{ color: 'var(--text-muted)', marginTop: '8px', marginBottom: '4px' }}>EVIDENCE REFERENCES</div>
+                <div style={{ color: 'var(--accent-amber)' }}>{selectedLocation.sourceEvidenceId || 'None explicitly linked'}</div>
+
+                <div style={{ color: 'var(--text-muted)', marginTop: '8px', marginBottom: '4px' }}>SOURCE DOCUMENTS</div>
+                <div style={{ color: '#ffffff' }}>{selectedLocation.sourcePages && selectedLocation.sourcePages.length > 0 ? `FIR Document — Page ${selectedLocation.sourcePages.join(', ')}` : 'Verified Investigation Record'}</div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '8px', flexDirection: 'column' }}>
                 <button 
                   onClick={() => onNavigate('cases', { case: cases.find(c => c.id === selectedLocation.caseId) })}
                   className="btn btn-secondary" style={{ flex: 1, fontSize: '0.75rem', padding: '8px' }}>
                   Open Case File
                 </button>
                 <button 
-                  onClick={() => {
-                     const caseData = cases.find(c => c.id === selectedLocation.caseId);
-                     const suspect = caseData ? suspects.find(s => caseData.suspectIds.includes(s.id)) : null;
-                     if(suspect) onNavigate('suspects', { suspect });
-                  }}
-                  className="btn btn-primary" style={{ flex: 1, fontSize: '0.75rem', padding: '8px' }}>
-                  View Primary Suspect
+                  onClick={() => onNavigate('evidence')}
+                  className="btn btn-secondary" style={{ flex: 1, fontSize: '0.75rem', padding: '8px' }}>
+                  View Evidence Vault
                 </button>
               </div>
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
-              Select a hotspot to inspect spatial intelligence.
+              Select a marker to inspect verified location data.
             </div>
           )}
         </div>

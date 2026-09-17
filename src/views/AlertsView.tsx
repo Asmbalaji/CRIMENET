@@ -16,15 +16,22 @@ export const AlertsView: React.FC<AlertsViewProps> = ({ alerts, onMarkRead, onNa
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
         <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 700, color: '#ffffff' }}>
-          Real-Time Tactical Threat Stream
+          Threat Stream
         </h2>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-          LIVE DEMO ALERTS • GEOFENCE BREACHES • FINANCIAL ANOMALIES
+          {alerts.length} SYSTEM ALERTS
         </p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        {alerts.map((alert) => (
+        {alerts.length === 0 ? (
+          <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <CheckCircle size={48} style={{ margin: '0 auto 16px auto', opacity: 0.5 }} />
+            <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '8px' }}>No active alerts</h3>
+            <p>System is operating normally. Upload new intelligence to generate tactical alerts.</p>
+          </div>
+        ) : (
+        alerts.map((alert) => (
           <div
             key={alert.id}
             className="glass-panel"
@@ -112,7 +119,8 @@ export const AlertsView: React.FC<AlertsViewProps> = ({ alerts, onMarkRead, onNa
               </div>
             </div>
           </div>
-        ))}
+        ))
+        )}
       </div>
     </div>
   );

@@ -425,26 +425,25 @@ const NetworkAnalysisViewComponent: React.FC<NetworkAnalysisViewProps> = ({ init
           </div>
         </div>
 
-        {/* RIGHT SIDE: The Metrics Sidebar */}
         <div style={{ width: '320px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', background: '#0d1117', border: '1px solid #1f2937', borderRadius: '12px', padding: '16px' }}>
-          <Widget value="9" label="ACTIVE INVESTIGATIONS" color="var(--accent-blue)" />
-          <Widget value="6" label="TARGETS OF INTEREST" color="var(--accent-amber)" />
+          <Widget value={cases.filter((c: any) => c.status === 'ACTIVE').length.toString()} label="ACTIVE INVESTIGATIONS" color="var(--accent-blue)" />
+          <Widget value={suspects.length.toString()} label="TARGETS OF INTEREST" color="var(--accent-amber)" />
           
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '16px 0' }}>
             <div style={{ width: '130px', height: '130px', borderRadius: '50%', background: 'rgba(10, 15, 29, 0.6)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
               <svg width="130" height="130" style={{ position: 'absolute', inset: 0, transform: 'rotate(-90deg)' }}>
                 <circle cx="65" cy="65" r="58" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6" />
-                <circle cx="65" cy="65" r="58" fill="none" stroke="var(--accent-red)" strokeWidth="6" strokeDasharray="364" strokeDashoffset={364 * (1 - 0.83)} className="animate-pulse-neon radial-gauge-glow" strokeLinecap="round" />
+                <circle cx="65" cy="65" r="58" fill="none" stroke="var(--accent-red)" strokeWidth="6" strokeDasharray="364" strokeDashoffset={364 * (1 - (suspects.length > 0 ? suspects.filter((s: any) => s.riskScore >= 80).length / suspects.length : 0))} className="animate-pulse-neon radial-gauge-glow" strokeLinecap="round" />
               </svg>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: 'var(--font-display)' }}>83%</div>
+                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: 'var(--font-display)' }}>{suspects.length > 0 ? Math.round((suspects.filter((s: any) => s.riskScore >= 80).length / suspects.length) * 100) : 0}%</div>
                 <div style={{ fontSize: '0.6rem', color: 'var(--accent-red)', fontWeight: 700, letterSpacing: '1px', marginTop: '4px' }}>HIGH RISK</div>
               </div>
             </div>
           </div>
 
-          <Widget value="5" label="KNOWN FRONT COMPANIES" color="var(--accent-cyan)" />
-          <Widget value="4" label="HIGH-RISK EVENTS" color="var(--accent-red)" />
+          <Widget value={evidence.filter((e: any) => e.category === 'FINANCIAL_LEDGER').length.toString()} label="FINANCIAL LEDGERS" color="var(--accent-cyan)" />
+          <Widget value={suspects.filter((s: any) => s.threatLevel === 'CRITICAL').length.toString()} label="CRITICAL THREATS" color="var(--accent-red)" />
         </div>
       </div>
     </div>

@@ -47,13 +47,19 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ selectedCase, onNaviga
             ))}
           </select>
 
-          <button onClick={handlePrint} className="btn btn-primary print:hidden" style={{ fontSize: '0.8rem' }}>
+          <button onClick={handlePrint} className="btn btn-primary print:hidden" style={{ fontSize: '0.8rem' }} disabled={cases.length === 0}>
             <Printer size={16} /> Print / Export Dossier PDF
           </button>
         </div>
       </div>
 
-      {/* Printable Report Document Card */}
+      {cases.length === 0 ? (
+        <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <FileText size={48} style={{ margin: '0 auto 16px auto', opacity: 0.5 }} />
+          <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '8px' }}>No reports available</h3>
+          <p>Upload and verify a case document to generate automated intelligence dossiers.</p>
+        </div>
+      ) : (
       <div
         className="glass-panel print:bg-white print:text-black print:block print:w-full"
         style={{
@@ -134,6 +140,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ selectedCase, onNaviga
           <div>CONFIDENTIALITY: LEVEL-5 LAW ENFORCEMENT ONLY</div>
         </div>
       </div>
+      )}
     </div>
   );
 };

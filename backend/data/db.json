@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "id": "CAS-TEST-001",
+      "caseNumber": "T-001",
+      "title": "Test Case",
+      "status": "ACTIVE",
+      "severity": "HIGH",
+      "leadOfficer": "Insp. Test",
+      "dateOpened": "2026-09-17T18:55:17.284Z",
+      "summary": "The accused was found in possession of 40kg of suspicious material. A red notebook was recovered as evidence.",
+      "syndicate": "Unknown",
+      "location": "Delhi",
+      "suspectIds": [
+        "SUS-TEST-001"
+      ],
+      "evidenceCount": 1,
+      "isPublicRecord": false
+    }
+  ],
+  "suspects": [],
+  "evidence": [],
+  "locations": [],
+  "alerts": [],
+  "networkEdges": []
+}
