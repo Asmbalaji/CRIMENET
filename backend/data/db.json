@@ -428,7 +428,7 @@
       "relationshipType": "SHARED_SUSPECT",
       "id": "CCL-WKRRYJJCP",
       "sourceCaseId": "CAS-TEST-B",
-      "status": "PENDING",
+      "status": "VERIFIED",
       "createdAt": "2026-09-17T19:12:46.162Z"
     },
     {
@@ -438,7 +438,7 @@
       "relationshipType": "SHARED_LOCATION",
       "id": "CCL-Q184CLA1J",
       "sourceCaseId": "CAS-TEST-B",
-      "status": "PENDING",
+      "status": "VERIFIED",
       "createdAt": "2026-09-17T19:12:46.162Z"
     }
   ]
