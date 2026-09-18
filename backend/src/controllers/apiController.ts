@@ -175,7 +175,15 @@ export const extractCaseInformation = async (req: Request, res: Response, next: 
         language: pipelineResult.language
       }
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === 'AI_EXTRACTION_VALIDATION_ERROR') {
+      res.status(400).json({
+        success: false,
+        error: error.message || 'Document extraction failed',
+        code: 'AI_EXTRACTION_VALIDATION_ERROR'
+      });
+      return;
+    }
     next(error);
   }
 };

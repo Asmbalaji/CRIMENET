@@ -66,136 +66,304 @@ export const extractFIRData = async (documentText: string, documentType: string 
 
   const systemPrompt = `You are CRIMENET's document extraction engine.
 
-Your task is to extract factual information from an uploaded case document.
-The document type is: ${documentType}. Adjust your extraction priorities based on this type (e.g. CDRs have heavy communications, FIRs have incident details).
+Extract only information explicitly present in the supplied document.
 
-Extract only information explicitly supported by the document.
-
-Never invent names, dates, locations, legal sections, evidence, relationships, or case details.
+Do not invent names, locations, dates, phone numbers, case numbers, relationships, evidence, or identifiers.
 
 If a field is not present, return null or an empty array.
 
-Distinguish between complainant, victim, suspect, accused, witness, and other persons based only on the document.
+For personal names:
+- preserve the original name exactly when possible
+- create an English transliteration/romanization
+- DO NOT translate a person's name by meaning
+- example:
+  Tamil: ரமேஷ்
+  nameEnglish: Ramesh
 
-Do not determine guilt.
+For locations:
+- preserve the original value
+- provide an English representation when confidently identifiable
 
-Do not make unsupported assumptions.
+Every extracted entity must include source page numbers.
 
-Preserve the wording of names and case identifiers as written where possible.
+Return only the required JSON structure.`;
 
-CRITICAL: For every extracted entity (person, location, organization, evidence), you must capture its original name exactly as it appears in the text ("nameOriginal") AND detect its original language ("originalLanguage").
-You MUST also provide an English transliteration ("nameEnglish") for personal names (do NOT translate meanings, e.g., "ரமேஷ்" -> "Ramesh"). 
-For locations/items, normalize to English ("descriptionEnglish").
-If you cannot confidently transliterate a name, set "nameEnglish" to null.
+  console.log(`[AI_EXTRACTION] Request - docType: ${documentType}, length: ${documentText.length}, model: openai/gpt-oss-20b`);
 
-For relationships, create a relationship only when the document provides evidence for that relationship.
+  try {
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `DOCUMENT TEXT:\n\n${documentText}` }
+      ],
+      model: 'openai/gpt-oss-20b',
+      temperature: 0.1,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "fir_extraction",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              case: {
+                type: "object",
+                properties: {
+                  caseNumber: { type: ["string", "null"] },
+                  firNumber: { type: ["string", "null"] },
+                  caseTitle: { type: ["string", "null"] },
+                  policeStation: { type: ["string", "null"] },
+                  district: { type: ["string", "null"] },
+                  state: { type: ["string", "null"] },
+                  firDate: { type: ["string", "null"] },
+                  incidentDate: { type: ["string", "null"] },
+                  incidentLocation: { type: ["string", "null"] },
+                  caseStatus: { type: ["string", "null"] },
+                  offenceDescription: { type: ["string", "null"] },
+                  legalSections: {
+                    type: "array",
+                    items: { type: "string" }
+                  }
+                },
+                required: [
+                  "caseNumber",
+                  "firNumber",
+                  "caseTitle",
+                  "policeStation",
+                  "district",
+                  "state",
+                  "firDate",
+                  "incidentDate",
+                  "incidentLocation",
+                  "caseStatus",
+                  "offenceDescription",
+                  "legalSections"
+                ],
+                additionalProperties: false
+              },
+      
+              persons: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    nameOriginal: { type: ["string", "null"] },
+                    nameEnglish: { type: ["string", "null"] },
+                    originalLanguage: { type: ["string", "null"] },
+                    role: {
+                      type: "string",
+                      enum: [
+                        "complainant",
+                        "victim",
+                        "suspect",
+                        "accused",
+                        "witness",
+                        "other"
+                      ]
+                    },
+                    aliases: {
+                      type: "array",
+                      items: { type: "string" }
+                    },
+                    sourcePages: {
+                      type: "array",
+                      items: { type: "integer" }
+                    }
+                  },
+                  required: [
+                    "nameOriginal",
+                    "nameEnglish",
+                    "originalLanguage",
+                    "role",
+                    "aliases",
+                    "sourcePages"
+                  ],
+                  additionalProperties: false
+                }
+              },
+      
+              locations: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    original: { type: ["string", "null"] },
+                    english: { type: ["string", "null"] },
+                    address: { type: ["string", "null"] },
+                    city: { type: ["string", "null"] },
+                    district: { type: ["string", "null"] },
+                    state: { type: ["string", "null"] },
+                    sourcePages: {
+                      type: "array",
+                      items: { type: "integer" }
+                    }
+                  },
+                  required: [
+                    "original",
+                    "english",
+                    "address",
+                    "city",
+                    "district",
+                    "state",
+                    "sourcePages"
+                  ],
+                  additionalProperties: false
+                }
+              },
+      
+              organizations: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    nameOriginal: { type: ["string", "null"] },
+                    nameEnglish: { type: ["string", "null"] },
+                    originalLanguage: { type: ["string", "null"] },
+                    sourcePages: {
+                      type: "array",
+                      items: { type: "integer" }
+                    }
+                  },
+                  required: [
+                    "nameOriginal",
+                    "nameEnglish",
+                    "originalLanguage",
+                    "sourcePages"
+                  ],
+                  additionalProperties: false
+                }
+              },
+      
+              evidence: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    type: { type: ["string", "null"] },
+                    description: { type: ["string", "null"] },
+                    reference: { type: ["string", "null"] },
+                    sourcePages: {
+                      type: "array",
+                      items: { type: "integer" }
+                    }
+                  },
+                  required: [
+                    "type",
+                    "description",
+                    "reference",
+                    "sourcePages"
+                  ],
+                  additionalProperties: false
+                }
+              },
+      
+              vehicles: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    registrationNumber: { type: ["string", "null"] },
+                    description: { type: ["string", "null"] },
+                    sourcePages: {
+                      type: "array",
+                      items: { type: "integer" }
+                    }
+                  },
+                  required: [
+                    "registrationNumber",
+                    "description",
+                    "sourcePages"
+                  ],
+                  additionalProperties: false
+                }
+              },
+      
+              relationships: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    sourcePerson: { type: ["string", "null"] },
+                    targetPerson: { type: ["string", "null"] },
+                    relationshipType: { type: ["string", "null"] },
+                    description: { type: ["string", "null"] },
+                    sourcePages: {
+                      type: "array",
+                      items: { type: "integer" }
+                    }
+                  },
+                  required: [
+                    "sourcePerson",
+                    "targetPerson",
+                    "relationshipType",
+                    "description",
+                    "sourcePages"
+                  ],
+                  additionalProperties: false
+                }
+              },
+      
+              summary: {
+                type: ["string", "null"]
+              },
+      
+              missingFields: {
+                type: "array",
+                items: { type: "string" }
+              },
+      
+              confidence: {
+                type: "object",
+                properties: {
+                  overall: { type: "number" },
+                  caseDetails: { type: "number" },
+                  persons: { type: "number" },
+                  locations: { type: "number" },
+                  evidence: { type: "number" },
+                  relationships: { type: "number" }
+                },
+                required: [
+                  "overall",
+                  "caseDetails",
+                  "persons",
+                  "locations",
+                  "evidence",
+                  "relationships"
+                ],
+                additionalProperties: false
+              }
+            },
+      
+            required: [
+              "case",
+              "persons",
+              "locations",
+              "organizations",
+              "evidence",
+              "vehicles",
+              "relationships",
+              "summary",
+              "missingFields",
+              "confidence"
+            ],
+      
+            additionalProperties: false
+          }
+        }
+      }
+    });
 
-Every extracted person, location, evidence item, and relationship should include source page numbers whenever available.
-
-Return a strictly formatted JSON object matching this exact schema:
-
-{
-  "case": {
-    "caseNumber": "string | null",
-    "firNumber": "string | null",
-    "caseTitle": "string | null",
-    "policeStation": "string | null",
-    "district": "string | null",
-    "state": "string | null",
-    "firDate": "string | null",
-    "incidentDate": "string | null",
-    "incidentLocation": "string | null",
-    "caseStatus": "string | null",
-    "offenceDescription": "string | null",
-    "legalSections": ["string"]
-  },
-  "persons": [
-    {
-      "nameOriginal": "string",
-      "nameEnglish": "string | null (must be transliterated, e.g. ரமேஷ் -> Ramesh)",
-      "originalLanguage": "string",
-      "role": "complainant|victim|suspect|accused|witness|other",
-      "aliases": ["string"],
-      "sourcePages": [1]
-    }
-  ],
-  "locations": [
-    {
-      "nameOriginal": "string",
-      "nameEnglish": "string | null",
-      "originalLanguage": "string",
-      "address": "string | null",
-      "city": "string",
-      "district": "string | null",
-      "state": "string",
-      "type": "incident|residence|workplace|other",
-      "sourcePages": [1]
-    }
-  ],
-  "organizations": [
-    {
-      "nameOriginal": "string",
-      "nameEnglish": "string | null",
-      "originalLanguage": "string",
-      "type": "string",
-      "sourcePages": [1]
-    }
-  ],
-  "evidence": [
-    {
-      "descriptionOriginal": "string",
-      "descriptionEnglish": "string | null",
-      "originalLanguage": "string",
-      "type": "string",
-      "sourcePages": [1]
-    }
-  ],
-  "vehicles": [
-    {
-      "identifier": "string",
-      "type": "string",
-      "sourcePages": [1]
-    }
-  ],
-  "financialReferences": [
-    {
-      "description": "string",
-      "amount": "number | null",
-      "currency": "string | null",
-      "sourcePages": [1]
-    }
-  ],
-  "relationships": [
-    {
-      "source": "string (person name)",
-      "target": "string (person name)",
-      "relationship": "string",
-      "sourcePages": [1]
-    }
-  ],
-  "summary": "string | null",
-  "missingFields": ["string"],
-  "confidence": {
-    "overall": 0,
-    "caseDetails": 0,
-    "persons": 0,
-    "locations": 0,
-    "evidence": 0,
-    "relationships": 0
+    const responseContent = completion.choices[0]?.message?.content;
+    if (!responseContent) throw new Error("No response from Groq");
+    
+    console.log(`[AI_EXTRACTION] Success`);
+    return JSON.parse(responseContent);
+  } catch (error: any) {
+    console.error(`[AI_EXTRACTION] Failed:`, error.message || error);
+    throw {
+      success: false,
+      error: "Document extraction failed",
+      code: "AI_EXTRACTION_VALIDATION_ERROR"
+    };
   }
-}`;
-
-  const completion = await groq.chat.completions.create({
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: documentText }
-    ],
-    model: 'openai/gpt-oss-20b',
-    response_format: { type: 'json_object' }
-  });
-
-  const responseContent = completion.choices[0]?.message?.content;
-  if (!responseContent) throw new Error("No response from Groq");
-  
-  return JSON.parse(responseContent);
 };

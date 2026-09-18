@@ -95,9 +95,13 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
       if (data.success) {
         setExtractedData(data.data);
       } else {
-        setUploadError(data.message || 'AI extraction failed.');
+        if (data.code === 'AI_EXTRACTION_VALIDATION_ERROR') {
+          setUploadError('Document analysis failed. The document was uploaded successfully, but AI extraction could not validate the result. Please try again.');
+        } else {
+          setUploadError(data.error || data.message || 'AI extraction failed.');
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       setUploadError('Network error while extracting document data.');
     } finally {
       setIsExtracting(false);
