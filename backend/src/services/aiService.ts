@@ -64,307 +64,248 @@ export const extractFIRData = async (documentText: string, documentType: string 
     apiKey: process.env.GROQ_API_KEY
   });
 
-  const systemPrompt = `You are CRIMENET's document extraction engine.
+  const systemPrompt = `You are CRIMENET's document intelligence extraction engine.
 
-Extract only information explicitly present in the supplied document.
+Extract structured information from FIR, case documents, CDR documents,
+reports and other investigation documents.
 
-Do not invent names, locations, dates, phone numbers, case numbers, relationships, evidence, or identifiers.
+Return ONLY valid JSON.
 
-If a field is not present, return null or an empty array.
+Do not write markdown.
+Do not write explanations outside JSON.
 
-For personal names:
-- preserve the original name exactly when possible
-- create an English transliteration/romanization
-- DO NOT translate a person's name by meaning
-- example:
-  Tamil: ரமேஷ்
-  nameEnglish: Ramesh
+Never invent information.
+
+If information is missing:
+- use null for single values
+- use [] for arrays
+
+For names:
+preserve the original-language name and provide an English transliteration.
+
+DO NOT translate a person's name by meaning.
+
+Example:
+
+{
+  "nameOriginal": "ரமேஷ்",
+  "nameEnglish": "Ramesh",
+  "originalLanguage": "Tamil"
+}
 
 For locations:
-- preserve the original value
-- provide an English representation when confidently identifiable
+preserve the original-language value and provide an English representation
+when confidently identifiable.
 
-Every extracted entity must include source page numbers.
+Example:
 
-Return only the required JSON structure.`;
+{
+  "original": "கோயம்புத்தூர்",
+  "english": "Coimbatore"
+}
+
+Every extracted item must include sourcePages when possible.
+
+If source page numbers are unavailable, return [].
+
+The English name must be a transliteration/romanization,
+not a semantic translation.
+
+Do not identify two people as the same person only because their names are similar.`;
+
+  const userPrompt = `Extract information from this document.
+
+Return JSON using this structure:
+
+{
+  "document": {
+    "documentType": null,
+    "language": null,
+    "languages": []
+  },
+
+  "case": {
+    "caseNumber": null,
+    "firNumber": null,
+    "caseTitle": null,
+    "policeStation": null,
+    "district": null,
+    "state": null,
+    "firDate": null,
+    "incidentDate": null,
+    "incidentLocation": null,
+    "caseStatus": null,
+    "offenceDescription": null,
+    "legalSections": []
+  },
+
+  "persons": [],
+
+  "locations": [],
+
+  "organizations": [],
+
+  "evidence": [],
+
+  "vehicles": [],
+
+  "financialReferences": [],
+
+  "relationships": [],
+
+  "summary": null,
+
+  "missingFields": []
+}
+
+PERSON OBJECT:
+
+{
+  "nameOriginal": null,
+  "nameEnglish": null,
+  "originalLanguage": null,
+  "role": null,
+  "aliases": [],
+  "sourcePages": []
+}
+
+LOCATION OBJECT:
+
+{
+  "original": null,
+  "english": null,
+  "address": null,
+  "city": null,
+  "district": null,
+  "state": null,
+  "latitude": null,
+  "longitude": null,
+  "sourcePages": []
+}
+
+ORGANIZATION OBJECT:
+
+{
+  "nameOriginal": null,
+  "nameEnglish": null,
+  "originalLanguage": null,
+  "sourcePages": []
+}
+
+EVIDENCE OBJECT:
+
+{
+  "type": null,
+  "description": null,
+  "reference": null,
+  "sourcePages": []
+}
+
+VEHICLE OBJECT:
+
+{
+  "registrationNumber": null,
+  "description": null,
+  "sourcePages": []
+}
+
+FINANCIAL REFERENCE OBJECT:
+
+{
+  "type": null,
+  "reference": null,
+  "description": null,
+  "sourcePages": []
+}
+
+RELATIONSHIP OBJECT:
+
+{
+  "sourcePerson": null,
+  "targetPerson": null,
+  "relationshipType": null,
+  "description": null,
+  "sourcePages": []
+}
+
+DOCUMENT:
+
+${documentText}`;
 
   console.log(`[AI_EXTRACTION] Request - docType: ${documentType}, length: ${documentText.length}, model: openai/gpt-oss-20b`);
 
   try {
-    const completion = await groq.chat.completions.create({
+    const response = await groq.chat.completions.create({
+      model: "openai/gpt-oss-20b",
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `DOCUMENT TEXT:\n\n${documentText}` }
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
       ],
-      model: 'openai/gpt-oss-20b',
-      temperature: 0.1,
-      max_tokens: 4096,
       response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "fir_extraction",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              case: {
-                type: "object",
-                properties: {
-                  caseNumber: { type: ["string", "null"] },
-                  firNumber: { type: ["string", "null"] },
-                  caseTitle: { type: ["string", "null"] },
-                  policeStation: { type: ["string", "null"] },
-                  district: { type: ["string", "null"] },
-                  state: { type: ["string", "null"] },
-                  firDate: { type: ["string", "null"] },
-                  incidentDate: { type: ["string", "null"] },
-                  incidentLocation: { type: ["string", "null"] },
-                  caseStatus: { type: ["string", "null"] },
-                  offenceDescription: { type: ["string", "null"] },
-                  legalSections: {
-                    type: "array",
-                    items: { type: "string" }
-                  }
-                },
-                required: [
-                  "caseNumber",
-                  "firNumber",
-                  "caseTitle",
-                  "policeStation",
-                  "district",
-                  "state",
-                  "firDate",
-                  "incidentDate",
-                  "incidentLocation",
-                  "caseStatus",
-                  "offenceDescription",
-                  "legalSections"
-                ],
-                additionalProperties: false
-              },
-      
-              persons: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    nameOriginal: { type: ["string", "null"] },
-                    nameEnglish: { type: ["string", "null"] },
-                    originalLanguage: { type: ["string", "null"] },
-                    role: {
-                      type: "string",
-                      enum: [
-                        "complainant",
-                        "victim",
-                        "suspect",
-                        "accused",
-                        "witness",
-                        "other"
-                      ]
-                    },
-                    aliases: {
-                      type: "array",
-                      items: { type: "string" }
-                    },
-                    sourcePages: {
-                      type: "array",
-                      items: { type: "integer" }
-                    }
-                  },
-                  required: [
-                    "nameOriginal",
-                    "nameEnglish",
-                    "originalLanguage",
-                    "role",
-                    "aliases",
-                    "sourcePages"
-                  ],
-                  additionalProperties: false
-                }
-              },
-      
-              locations: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    original: { type: ["string", "null"] },
-                    english: { type: ["string", "null"] },
-                    address: { type: ["string", "null"] },
-                    city: { type: ["string", "null"] },
-                    district: { type: ["string", "null"] },
-                    state: { type: ["string", "null"] },
-                    sourcePages: {
-                      type: "array",
-                      items: { type: "integer" }
-                    }
-                  },
-                  required: [
-                    "original",
-                    "english",
-                    "address",
-                    "city",
-                    "district",
-                    "state",
-                    "sourcePages"
-                  ],
-                  additionalProperties: false
-                }
-              },
-      
-              organizations: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    nameOriginal: { type: ["string", "null"] },
-                    nameEnglish: { type: ["string", "null"] },
-                    originalLanguage: { type: ["string", "null"] },
-                    sourcePages: {
-                      type: "array",
-                      items: { type: "integer" }
-                    }
-                  },
-                  required: [
-                    "nameOriginal",
-                    "nameEnglish",
-                    "originalLanguage",
-                    "sourcePages"
-                  ],
-                  additionalProperties: false
-                }
-              },
-      
-              evidence: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    type: { type: ["string", "null"] },
-                    description: { type: ["string", "null"] },
-                    reference: { type: ["string", "null"] },
-                    sourcePages: {
-                      type: "array",
-                      items: { type: "integer" }
-                    }
-                  },
-                  required: [
-                    "type",
-                    "description",
-                    "reference",
-                    "sourcePages"
-                  ],
-                  additionalProperties: false
-                }
-              },
-      
-              vehicles: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    registrationNumber: { type: ["string", "null"] },
-                    description: { type: ["string", "null"] },
-                    sourcePages: {
-                      type: "array",
-                      items: { type: "integer" }
-                    }
-                  },
-                  required: [
-                    "registrationNumber",
-                    "description",
-                    "sourcePages"
-                  ],
-                  additionalProperties: false
-                }
-              },
-      
-              relationships: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    sourcePerson: { type: ["string", "null"] },
-                    targetPerson: { type: ["string", "null"] },
-                    relationshipType: { type: ["string", "null"] },
-                    description: { type: ["string", "null"] },
-                    sourcePages: {
-                      type: "array",
-                      items: { type: "integer" }
-                    }
-                  },
-                  required: [
-                    "sourcePerson",
-                    "targetPerson",
-                    "relationshipType",
-                    "description",
-                    "sourcePages"
-                  ],
-                  additionalProperties: false
-                }
-              },
-      
-              summary: {
-                type: ["string", "null"]
-              },
-      
-              missingFields: {
-                type: "array",
-                items: { type: "string" }
-              },
-      
-              confidence: {
-                type: "object",
-                properties: {
-                  overall: { type: "number" },
-                  caseDetails: { type: "number" },
-                  persons: { type: "number" },
-                  locations: { type: "number" },
-                  evidence: { type: "number" },
-                  relationships: { type: "number" }
-                },
-                required: [
-                  "overall",
-                  "caseDetails",
-                  "persons",
-                  "locations",
-                  "evidence",
-                  "relationships"
-                ],
-                additionalProperties: false
-              }
-            },
-      
-            required: [
-              "case",
-              "persons",
-              "locations",
-              "organizations",
-              "evidence",
-              "vehicles",
-              "relationships",
-              "summary",
-              "missingFields",
-              "confidence"
-            ],
-      
-            additionalProperties: false
-          }
-        }
-      }
+        type: "json_object"
+      },
+      temperature: 0.1,
+      max_completion_tokens: 8000
     });
 
-    const responseContent = completion.choices[0]?.message?.content;
-    if (!responseContent) throw new Error("No response from Groq");
-    
-    console.log(`[AI_EXTRACTION] Success`);
-    return JSON.parse(responseContent);
+    const rawContent = response.choices?.[0]?.message?.content;
+
+    if (!rawContent) {
+      throw new Error("AI returned an empty response");
+    }
+
+    const extracted = JSON.parse(rawContent);
+    return validateAndNormalizeExtraction(extracted);
   } catch (error: any) {
     console.error(`[AI_EXTRACTION] Failed:`, error.message || error);
+    
+    if (error instanceof SyntaxError) {
+      throw {
+        success: false,
+        error: "AI returned an invalid extraction result.",
+        code: "AI_INVALID_JSON"
+      };
+    }
+    
     throw {
       success: false,
-      error: "Document extraction failed",
-      code: "AI_EXTRACTION_VALIDATION_ERROR"
+      error: "Document analysis failed. Please try again.",
+      code: "AI_EXTRACTION_FAILED"
     };
   }
+};
+
+const validateAndNormalizeExtraction = (data: any) => {
+  return {
+    document: {
+      documentType: data?.document?.documentType ?? null,
+      language: data?.document?.language ?? null,
+      languages: Array.isArray(data?.document?.languages) ? data.document.languages : []
+    },
+
+    case: {
+      caseNumber: data?.case?.caseNumber ?? null,
+      firNumber: data?.case?.firNumber ?? null,
+      caseTitle: data?.case?.caseTitle ?? null,
+      policeStation: data?.case?.policeStation ?? null,
+      district: data?.case?.district ?? null,
+      state: data?.case?.state ?? null,
+      firDate: data?.case?.firDate ?? null,
+      incidentDate: data?.case?.incidentDate ?? null,
+      incidentLocation: data?.case?.incidentLocation ?? null,
+      caseStatus: data?.case?.caseStatus ?? null,
+      offenceDescription: data?.case?.offenceDescription ?? null,
+      legalSections: Array.isArray(data?.case?.legalSections) ? data.case.legalSections : []
+    },
+
+    persons: Array.isArray(data?.persons) ? data.persons : [],
+    locations: Array.isArray(data?.locations) ? data.locations : [],
+    organizations: Array.isArray(data?.organizations) ? data.organizations : [],
+    evidence: Array.isArray(data?.evidence) ? data.evidence : [],
+    vehicles: Array.isArray(data?.vehicles) ? data.vehicles : [],
+    financialReferences: Array.isArray(data?.financialReferences) ? data.financialReferences : [],
+    relationships: Array.isArray(data?.relationships) ? data.relationships : [],
+    summary: data?.summary ?? null,
+    missingFields: Array.isArray(data?.missingFields) ? data.missingFields : []
+  };
 };

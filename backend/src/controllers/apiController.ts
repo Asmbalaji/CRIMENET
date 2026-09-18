@@ -157,7 +157,11 @@ export const extractCaseInformation = async (req: Request, res: Response, next: 
     }
 
     if (!extractedText.trim()) {
-      res.status(400).json({ success: false, message: 'Unable to extract readable text from this document.' });
+      res.status(400).json({ 
+        success: false, 
+        error: 'Unable to extract readable text from this document.',
+        code: 'EMPTY_DOCUMENT_TEXT'
+      });
       return;
     }
 
@@ -176,11 +180,11 @@ export const extractCaseInformation = async (req: Request, res: Response, next: 
       }
     });
   } catch (error: any) {
-    if (error.code === 'AI_EXTRACTION_VALIDATION_ERROR') {
+    if (error.code === 'AI_INVALID_JSON' || error.code === 'AI_EXTRACTION_FAILED' || error.code === 'EMPTY_DOCUMENT_TEXT') {
       res.status(400).json({
         success: false,
-        error: error.message || 'Document extraction failed',
-        code: 'AI_EXTRACTION_VALIDATION_ERROR'
+        error: error.error || error.message || 'Document extraction failed',
+        code: error.code
       });
       return;
     }
