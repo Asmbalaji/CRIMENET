@@ -64,9 +64,9 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
     if (!file) return;
     
     // Validation
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
-    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(pdf|doc|docx|txt)$/i)) {
-      setUploadError('Unsupported file type. Please upload PDF, DOC, DOCX or TXT.');
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(pdf|doc|docx|txt|jpg|jpeg|png)$/i)) {
+      setUploadError('Unsupported file type. Please upload PDF, DOC, DOCX, TXT, JPG, or PNG.');
       return;
     }
     
@@ -904,7 +904,7 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
                   disabled={isExtracting}
                 >
                   {isExtracting ? <Loader2 size={16} className="radar-spinner" /> : <CheckCircle2 size={16} />}
-                  {isExtracting ? 'Extracting...' : 'Extract & Analyze Document'}
+                  {isExtracting ? 'OCR & Processing Pipeline...' : 'Extract & Analyze Document'}
                 </button>
               ) : (
                 <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleCreateCase} disabled={!newTitle}>Open Case</button>

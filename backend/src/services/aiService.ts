@@ -55,7 +55,7 @@ Rules:
   return JSON.parse(responseContent);
 };
 
-export const extractFIRData = async (documentText: string) => {
+export const extractFIRData = async (documentText: string, documentType: string = 'UNKNOWN') => {
   if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'your_key_here') {
     throw new Error('GROQ_API_KEY is not configured or is invalid.');
   }
@@ -66,7 +66,8 @@ export const extractFIRData = async (documentText: string) => {
 
   const systemPrompt = `You are CRIMENET's document extraction engine.
 
-Your task is to extract factual information from an uploaded case/FIR document.
+Your task is to extract factual information from an uploaded case document.
+The document type is: ${documentType}. Adjust your extraction priorities based on this type (e.g. CDRs have heavy communications, FIRs have incident details).
 
 Extract only information explicitly supported by the document.
 

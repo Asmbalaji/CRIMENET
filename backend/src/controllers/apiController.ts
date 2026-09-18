@@ -131,6 +131,9 @@ export const getAi = (req: Request, res: Response, next: NextFunction) => {
 
 import pdfParse from 'pdf-parse';
 
+import Tesseract from 'tesseract.js';
+import { processDocumentPipeline } from '../services/documentPipelineService';
+
 export const extractCaseInformation = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.file) {
@@ -145,8 +148,11 @@ export const extractCaseInformation = async (req: Request, res: Response, next: 
       extractedText = data.text;
     } else if (req.file.mimetype === 'text/plain') {
       extractedText = req.file.buffer.toString('utf-8');
+    } else if (req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/png' || req.file.mimetype === 'image/jpg') {
+      const { data: { text } } = await Tesseract.recognize(req.file.buffer, 'eng+hin+tam');
+      extractedText = text;
     } else {
-      res.status(400).json({ success: false, message: 'Unsupported file type. Please upload a PDF or TXT.' });
+      res.status(400).json({ success: false, message: 'Unsupported file type. Please upload a PDF, TXT, JPG, or PNG.' });
       return;
     }
 
@@ -155,8 +161,20 @@ export const extractCaseInformation = async (req: Request, res: Response, next: 
       return;
     }
 
-    const aiResult = await extractFIRData(extractedText);
-    res.json({ success: true, data: aiResult });
+    // Step 2 & 3 & 4: Pipeline (Type Detection, Language, Normalization)
+    const pipelineResult = await processDocumentPipeline(extractedText);
+
+    // Step 5: Structured Extraction (pass normalized text and doc type)
+    const aiResult = await extractFIRData(pipelineResult.normalizedText, pipelineResult.documentType);
+    
+    res.json({ 
+      success: true, 
+      data: aiResult,
+      pipelineMetadata: {
+        documentType: pipelineResult.documentType,
+        language: pipelineResult.language
+      }
+    });
   } catch (error) {
     next(error);
   }
