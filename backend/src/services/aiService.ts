@@ -98,6 +98,7 @@ Return only the required JSON structure.`;
       ],
       model: 'openai/gpt-oss-20b',
       temperature: 0.1,
+      max_tokens: 4096,
       response_format: {
         type: "json_schema",
         json_schema: {
