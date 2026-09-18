@@ -181,7 +181,9 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
         suspectIds.push(id);
         addLocalSuspect({
           id,
-          name: person.name || 'Unknown',
+          name: person.nameEnglish || 'Name Pending Verification',
+          nameOriginal: person.nameOriginal,
+          originalLanguage: person.originalLanguage,
           alias: person.aliases?.[0] || 'Unknown',
           threatLevel: person.role?.toLowerCase() === 'accused' ? 'HIGH' : 'MEDIUM',
           riskScore: person.role?.toLowerCase() === 'accused' ? 75 : 30,
@@ -204,7 +206,9 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
         addLocalLocation({
           id: `LOC-EXT-${Math.floor(Math.random() * 10000)}`,
           caseId: newCaseId,
-          title: loc.name || 'Unknown Location',
+          title: loc.nameEnglish || 'Unknown Location',
+          titleOriginal: loc.nameOriginal,
+          originalLanguage: loc.originalLanguage,
           city: loc.city || 'Unknown City',
           district: loc.district || undefined,
           state: loc.state || undefined,
@@ -214,6 +218,27 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
           threatLevel: (newSeverity as 'CRITICAL' | 'HIGH' | 'MEDIUM') || 'MEDIUM',
           timestamp: new Date().toISOString(),
           sourcePages: loc.sourcePages || [],
+          sourceEvidenceId: newEvidenceId,
+          verified: true
+        });
+      });
+    }
+
+    // Create extracted evidence items
+    if (verifiedData.evidence && verifiedData.evidence.length > 0) {
+      verifiedData.evidence.forEach((ev: any) => {
+        addLocalEvidence({
+          id: `EV-EXT-${Math.floor(Math.random() * 10000)}`,
+          caseId: newCaseId,
+          title: ev.descriptionEnglish || 'Unknown Evidence',
+          titleOriginal: ev.descriptionOriginal,
+          originalLanguage: ev.originalLanguage,
+          category: 'DOCUMENT', // fallback
+          timestamp: new Date().toISOString(),
+          source: 'FIR Extraction',
+          confidenceScore: 80,
+          summary: ev.type || '',
+          sourcePages: ev.sourcePages || [],
           sourceEvidenceId: newEvidenceId,
           verified: true
         });

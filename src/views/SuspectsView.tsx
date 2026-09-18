@@ -282,6 +282,22 @@ export const SuspectsView: React.FC<SuspectsViewProps> = ({ selectedSuspect, onS
                 <Fingerprint size={18} /> SYNTHETIC IDENTITY MATCH DATA
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
+                {selectedSuspect.nameOriginal && (
+                  <>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Original Name:</span>
+                      <div style={{ color: '#ffffff', fontWeight: 700, marginTop: '2px' }}>
+                        {selectedSuspect.nameOriginal}
+                      </div>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Language:</span>
+                      <div style={{ color: 'var(--accent-cyan)', fontWeight: 700, marginTop: '2px' }}>
+                        {selectedSuspect.originalLanguage || 'Unknown'}
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div>
                   <span style={{ color: 'var(--text-muted)' }}>Facial Recognition Match:</span>
                   <div style={{ color: 'var(--accent-emerald)', fontWeight: 700, marginTop: '2px' }}>

@@ -164,8 +164,8 @@ export const extractCaseInformation = async (req: Request, res: Response, next: 
     // Step 2 & 3 & 4: Pipeline (Type Detection, Language, Normalization)
     const pipelineResult = await processDocumentPipeline(extractedText);
 
-    // Step 5: Structured Extraction (pass normalized text and doc type)
-    const aiResult = await extractFIRData(pipelineResult.normalizedText, pipelineResult.documentType);
+    // Step 5: Structured Extraction (pass raw text and doc type to ensure original language names are retained)
+    const aiResult = await extractFIRData(extractedText, pipelineResult.documentType);
     
     res.json({ 
       success: true, 

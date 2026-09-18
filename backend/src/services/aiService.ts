@@ -83,6 +83,11 @@ Do not make unsupported assumptions.
 
 Preserve the wording of names and case identifiers as written where possible.
 
+CRITICAL: For every extracted entity (person, location, organization, evidence), you must capture its original name exactly as it appears in the text ("nameOriginal") AND detect its original language ("originalLanguage").
+You MUST also provide an English transliteration ("nameEnglish") for personal names (do NOT translate meanings, e.g., "ரமேஷ்" -> "Ramesh"). 
+For locations/items, normalize to English ("descriptionEnglish").
+If you cannot confidently transliterate a name, set "nameEnglish" to null.
+
 For relationships, create a relationship only when the document provides evidence for that relationship.
 
 Every extracted person, location, evidence item, and relationship should include source page numbers whenever available.
@@ -106,7 +111,9 @@ Return a strictly formatted JSON object matching this exact schema:
   },
   "persons": [
     {
-      "name": "string",
+      "nameOriginal": "string",
+      "nameEnglish": "string | null (must be transliterated, e.g. ரமேஷ் -> Ramesh)",
+      "originalLanguage": "string",
       "role": "complainant|victim|suspect|accused|witness|other",
       "aliases": ["string"],
       "sourcePages": [1]
@@ -114,7 +121,9 @@ Return a strictly formatted JSON object matching this exact schema:
   ],
   "locations": [
     {
-      "name": "string",
+      "nameOriginal": "string",
+      "nameEnglish": "string | null",
+      "originalLanguage": "string",
       "address": "string | null",
       "city": "string",
       "district": "string | null",
@@ -125,14 +134,18 @@ Return a strictly formatted JSON object matching this exact schema:
   ],
   "organizations": [
     {
-      "name": "string",
+      "nameOriginal": "string",
+      "nameEnglish": "string | null",
+      "originalLanguage": "string",
       "type": "string",
       "sourcePages": [1]
     }
   ],
   "evidence": [
     {
-      "description": "string",
+      "descriptionOriginal": "string",
+      "descriptionEnglish": "string | null",
+      "originalLanguage": "string",
       "type": "string",
       "sourcePages": [1]
     }

@@ -107,10 +107,14 @@ export const CaseVerificationModal: React.FC<VerificationModalProps> = ({ extrac
               <h3 style={{ fontSize: '1.1rem', color: 'var(--accent-cyan)', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>PERSONS IDENTIFIED</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {data.persons.map((p: any, idx: number) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px' }}>
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr 0.5fr', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px' }}>
                     <div>
-                      <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Name</label>
-                      <input type="text" className="input-field" style={{ width: '100%', fontSize: '0.8rem', padding: '6px' }} value={p.name || ''} onChange={e => handleArrayChange('persons', idx, 'name', e.target.value)} />
+                      <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Original Name ({p.originalLanguage || 'Unknown'})</label>
+                      <input type="text" className="input-field" disabled style={{ width: '100%', fontSize: '0.8rem', padding: '6px', opacity: 0.7 }} value={p.nameOriginal || ''} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>English Name {p.nameEnglish === null && <span style={{ color: 'var(--accent-red)' }}>(Requires Review)</span>}</label>
+                      <input type="text" className="input-field" style={{ width: '100%', fontSize: '0.8rem', padding: '6px' }} value={p.nameEnglish || ''} onChange={e => handleArrayChange('persons', idx, 'nameEnglish', e.target.value)} />
                     </div>
                     <div>
                       <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Role</label>
@@ -132,10 +136,14 @@ export const CaseVerificationModal: React.FC<VerificationModalProps> = ({ extrac
               <h3 style={{ fontSize: '1.1rem', color: 'var(--accent-cyan)', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>LOCATIONS</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {data.locations.map((loc: any, idx: number) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px' }}>
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr 0.5fr', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px' }}>
                     <div>
-                      <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Name</label>
-                      <input type="text" className="input-field" style={{ width: '100%', fontSize: '0.8rem', padding: '6px' }} value={loc.name || ''} onChange={e => handleArrayChange('locations', idx, 'name', e.target.value)} />
+                      <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Original Name ({loc.originalLanguage || 'Unknown'})</label>
+                      <input type="text" className="input-field" disabled style={{ width: '100%', fontSize: '0.8rem', padding: '6px', opacity: 0.7 }} value={loc.nameOriginal || ''} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>English Name {loc.nameEnglish === null && <span style={{ color: 'var(--accent-red)' }}>(Requires Review)</span>}</label>
+                      <input type="text" className="input-field" style={{ width: '100%', fontSize: '0.8rem', padding: '6px' }} value={loc.nameEnglish || ''} onChange={e => handleArrayChange('locations', idx, 'nameEnglish', e.target.value)} />
                     </div>
                     <div>
                       <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Type</label>
@@ -157,10 +165,14 @@ export const CaseVerificationModal: React.FC<VerificationModalProps> = ({ extrac
               <h3 style={{ fontSize: '1.1rem', color: 'var(--accent-cyan)', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>EVIDENCE</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {data.evidence.map((ev: any, idx: number) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px' }}>
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr 0.5fr', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px' }}>
                     <div>
-                      <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Description</label>
-                      <input type="text" className="input-field" style={{ width: '100%', fontSize: '0.8rem', padding: '6px' }} value={ev.description || ''} onChange={e => handleArrayChange('evidence', idx, 'description', e.target.value)} />
+                      <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Original Description ({ev.originalLanguage || 'Unknown'})</label>
+                      <input type="text" className="input-field" disabled style={{ width: '100%', fontSize: '0.8rem', padding: '6px', opacity: 0.7 }} value={ev.descriptionOriginal || ''} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>English Description {ev.descriptionEnglish === null && <span style={{ color: 'var(--accent-red)' }}>(Requires Review)</span>}</label>
+                      <input type="text" className="input-field" style={{ width: '100%', fontSize: '0.8rem', padding: '6px' }} value={ev.descriptionEnglish || ''} onChange={e => handleArrayChange('evidence', idx, 'descriptionEnglish', e.target.value)} />
                     </div>
                     <div>
                       <label style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Type</label>

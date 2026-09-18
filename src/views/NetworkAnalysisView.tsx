@@ -341,6 +341,17 @@ const NetworkAnalysisViewComponent: React.FC<NetworkAnalysisViewProps> = ({ init
                 <div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)', letterSpacing: '1px', marginBottom: '4px' }}>ENTITY PROFILE</div>
                   <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{selectedNode.label}</h3>
+                  {(() => {
+                    const sus = suspects.find((s: any) => s.id === selectedNode.id);
+                    if (sus?.nameOriginal) {
+                      return (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--accent-amber)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
+                          Original: {sus.nameOriginal} ({sus.originalLanguage})
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>ID: {selectedNode.id}</div>
                 </div>
                 <button 

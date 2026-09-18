@@ -1,6 +1,8 @@
 export interface Suspect {
   id: string;
   name: string;
+  nameOriginal?: string;
+  originalLanguage?: string;
   displayName?: string;
   fullName?: string;
   alias: string;
@@ -80,6 +82,8 @@ export interface NetworkEdge {
 export interface CrimeLocation {
   id: string;
   title: string;
+  titleOriginal?: string;
+  originalLanguage?: string;
   city: string;
   district?: string;
   state?: string;
@@ -97,13 +101,18 @@ export interface CrimeLocation {
 export interface EvidenceItem {
   id: string;
   title: string;
+  titleOriginal?: string;
+  originalLanguage?: string;
   category: 'CDR_LOG' | 'FINANCIAL_LEDGER' | 'ENCRYPTED_TEXT' | 'CCTV_SNIPPET' | 'BIOMETRIC_FILE' | 'DOCUMENT';
   timestamp: string;
   source: string;
+  sourcePages?: number[];
+  sourceEvidenceId?: string;
+  verified?: boolean;
   confidenceScore: number;
   caseId: string;
   summary: string;
-  metadata: Record<string, string>;
+  metadata?: Record<string, string>;
 }
 
 export interface TacticalAlert {

@@ -43,6 +43,8 @@ export const analyzeCrossCaseLinks = async (newCaseId: string) => {
 Your task is to identify logical, evidence-supported relationships between a NEWLY verified case and EXISTING verified cases.
 
 DO NOT hallucinate or assume connections based on vague similarities.
+IMPORTANT MULTILINGUAL RULE: Do NOT match two people solely because their English names look similar (e.g. Ramesh vs Ramesh) if they are just transliterations from different languages, unless there is supporting evidence. Use "POSSIBLE MATCH" in the reason if they only share a transliterated name. Evaluate BOTH nameOriginal and name.
+
 Look for:
 - Exact or highly similar suspect names/aliases (SHARED_SUSPECT)
 - Exact or highly similar incident locations or addresses (SHARED_LOCATION)
