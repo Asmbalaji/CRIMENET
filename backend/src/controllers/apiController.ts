@@ -10,6 +10,28 @@ export const getCases = (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+export const deleteCase = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const success = dataService.deleteCase(id);
+    if (!success) {
+      res.status(404).json({
+        success: false,
+        error: 'Case not found',
+        code: 'CASE_NOT_FOUND'
+      });
+      return;
+    }
+    res.json({
+      success: true,
+      message: 'Case deleted successfully',
+      caseId: id
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getEntities = (req: Request, res: Response, next: NextFunction) => {
   try {
     res.json(dataService.getEntities());

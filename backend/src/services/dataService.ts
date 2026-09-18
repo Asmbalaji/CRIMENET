@@ -118,3 +118,38 @@ export const updateCrossCaseLinkStatus = (id: string, status: 'VERIFIED' | 'REJE
     saveDb();
   }
 };
+
+export const deleteCase = (caseId: string) => {
+  const caseExists = db.cases.find(c => c.id === caseId);
+  if (!caseExists) return false;
+
+  // 1. Remove Case
+  db.cases = db.cases.filter(c => c.id !== caseId);
+
+  // 2. Remove Evidence for this case
+  db.evidence = db.evidence.filter(e => e.caseId !== caseId);
+
+  // 3. Remove caseId from suspects. If suspect has no cases left, remove suspect.
+  db.suspects = db.suspects.filter(s => {
+    if (s.associatedCaseIds) {
+      s.associatedCaseIds = s.associatedCaseIds.filter(id => id !== caseId);
+      return s.associatedCaseIds.length > 0;
+    }
+    return true; // Keep suspects without cases just in case, but typically they should have them
+  });
+
+  // 4. Remove locations explicitly linked to this case
+  db.locations = db.locations.filter(loc => loc.caseId !== caseId);
+
+  // 5. Remove CrossCaseLinks where this case is involved
+  if (db.crossCaseLinks) {
+    db.crossCaseLinks = db.crossCaseLinks.filter(link => link.sourceCaseId !== caseId && link.targetCaseId !== caseId);
+  }
+
+  // 6. Clean up network edges that might reference deleted suspects
+  const validSuspectIds = new Set(db.suspects.map(s => s.id));
+  db.networkEdges = db.networkEdges.filter(edge => validSuspectIds.has(edge.source) && validSuspectIds.has(edge.target));
+
+  saveDb();
+  return true;
+};

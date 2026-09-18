@@ -12,6 +12,7 @@ router.get('/alerts', apiController.getAlerts);
 router.get('/dashboard', apiController.getDashboardMetrics);
 
 router.post('/cases', apiController.createCase);
+router.delete('/cases/:id', apiController.deleteCase);
 router.post('/entities', apiController.createEntity);
 router.post('/evidence', apiController.createEvidence);
 router.post('/locations', apiController.createLocation);

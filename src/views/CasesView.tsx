@@ -47,6 +47,57 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractedData, setExtractedData] = useState<any>(null);
 
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [caseToDelete, setCaseToDelete] = useState<InvestigationCase | null>(null);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+
+  const { refreshData } = useData();
+
+  const initiateDelete = (c: InvestigationCase, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCaseToDelete(c);
+    setDeleteConfirmationText('');
+    setDeleteError('');
+    setDeleteModalOpen(true);
+  };
+
+  const executeDelete = async () => {
+    if (!caseToDelete) return;
+    setIsDeleting(true);
+    setDeleteError('');
+    try {
+      const res = await fetch(`http://localhost:5000/api/cases/${caseToDelete.id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setDeleteError(data.error || 'Case could not be deleted. Please try again.');
+        setIsDeleting(false);
+        return;
+      }
+      
+      // Success
+      setDeleteModalOpen(false);
+      setCaseToDelete(null);
+      setIsDeleting(false);
+      
+      // If we are viewing this case in the dossier, clear it
+      if (selectedCase?.id === caseToDelete.id) {
+        onSelectCase(null);
+      }
+      
+      // Refresh context
+      await refreshData();
+      
+    } catch (err) {
+      setDeleteError('Case could not be deleted. Please try again.');
+      setIsDeleting(false);
+    }
+  };
+
+
   const filteredCases = cases.filter((c) => {
     const matchesSearch =
       c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -771,6 +822,77 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
         </div>
       )}
       {/* New Case Modal */}
+      
+      {deleteModalOpen && caseToDelete && (
+        <div className="modal-overlay" onClick={() => !isDeleting && setDeleteModalOpen(false)}>
+          <div className="modal-content" style={{ maxWidth: '500px', border: '1px solid var(--accent-red)', boxShadow: '0 0 30px rgba(239, 68, 68, 0.2)' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Delete Case?</h2>
+              {!isDeleting && <button className="icon-btn" onClick={() => setDeleteModalOpen(false)}><X size={20} /></button>}
+            </div>
+            <div className="modal-body">
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.5' }}>
+                This action will permanently remove this case and its case-specific investigation data. Cross-case links associated with this case will also be removed.
+              </p>
+              
+              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--accent-cyan)', marginBottom: '5px' }}>
+                  {caseToDelete.isPublicRecord ? 'PUBLIC CASE • ' : ''}{caseToDelete.caseNumber}
+                </div>
+                <div style={{ fontWeight: 'bold' }}>{caseToDelete.title}</div>
+              </div>
+              
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Type <strong style={{ color: 'var(--accent-red)' }}>DELETE</strong> to confirm
+                </label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  style={{ width: '100%', borderColor: deleteConfirmationText === 'DELETE' ? 'var(--accent-red)' : '' }}
+                  value={deleteConfirmationText}
+                  onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                  placeholder="DELETE"
+                  disabled={isDeleting}
+                />
+              </div>
+
+              {deleteError && (
+                <div style={{ color: 'var(--accent-red)', fontSize: '0.85rem', marginBottom: '15px', padding: '10px', background: 'rgba(239,68,68,0.1)', borderRadius: '4px' }}>
+                  {deleteError}
+                </div>
+              )}
+              
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setDeleteModalOpen(false)}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ 
+                    background: deleteConfirmationText === 'DELETE' && !isDeleting ? 'var(--accent-red)' : 'var(--bg-dark)', 
+                    color: deleteConfirmationText === 'DELETE' && !isDeleting ? 'white' : 'var(--text-muted)',
+                    borderColor: deleteConfirmationText === 'DELETE' && !isDeleting ? 'var(--accent-red)' : 'var(--border-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onClick={executeDelete}
+                  disabled={deleteConfirmationText !== 'DELETE' || isDeleting}
+                >
+                  {isDeleting ? <Loader2 size={16} className="radar-spinner" /> : null}
+                  {isDeleting ? 'Deleting...' : 'Delete Case'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isNewCaseModalOpen && (
         <div
           style={{
