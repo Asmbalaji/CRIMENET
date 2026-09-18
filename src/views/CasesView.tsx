@@ -460,6 +460,13 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
                         <span>{c.leadOfficer}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)' }}>
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ padding: '4px 8px', fontSize: '0.7rem', color: 'var(--accent-red)', border: '1px solid var(--accent-red)', marginRight: '8px' }}
+                          onClick={(e) => initiateDelete(c, e)}
+                        >
+                          Delete
+                        </button>
                         <span>Inspect Dossier</span> <ArrowRight size={14} />
                       </div>
                     </div>
@@ -521,6 +528,13 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
                         <span>{c.leadOfficer}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)' }}>
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ padding: '4px 8px', fontSize: '0.7rem', color: 'var(--accent-red)', border: '1px solid var(--accent-red)', marginRight: '8px' }}
+                          onClick={(e) => initiateDelete(c, e)}
+                        >
+                          Delete
+                        </button>
                         <span>Inspect Dossier</span> <ArrowRight size={14} />
                       </div>
                     </div>
@@ -565,7 +579,6 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px' }}>
               <div>
                 <span className="badge badge-cyan" style={{ marginBottom: '8px' }}>
@@ -575,12 +588,21 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
                   {selectedCase.title}
                 </h2>
               </div>
-              <button
-                onClick={() => onSelectCase(null)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-              >
-                <X size={24} />
-              </button>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <button
+                  className="btn btn-secondary"
+                  style={{ color: 'var(--accent-red)', borderColor: 'var(--accent-red)' }}
+                  onClick={(e) => initiateDelete(selectedCase, e)}
+                >
+                  Delete Case
+                </button>
+                <button
+                  onClick={() => onSelectCase(null)}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
             </div>
 
             {/* Meta Specs */}
