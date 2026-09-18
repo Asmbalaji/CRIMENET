@@ -45,6 +45,7 @@ export function App() {
   const [selectedLocation, setSelectedLocation] = useState<any | null>(null);
   const [selectedEvidence, setSelectedEvidence] = useState<any | null>(null);
   const [networkEvidenceId, setNetworkEvidenceId] = useState<string | null>(null);
+  const [aiCaseId, setAiCaseId] = useState<string | null>(null);
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -70,6 +71,14 @@ export function App() {
     if (payload?.location) setSelectedLocation(payload.location);
     if (payload?.evidence) setSelectedEvidence(payload.evidence);
     if (payload?.initialEvidenceId) setNetworkEvidenceId(payload.initialEvidenceId);
+    
+    if (view === 'ai') {
+      if (payload?.caseId) {
+        setAiCaseId(payload.caseId);
+      } else if (!payload?.retainContext) {
+        setAiCaseId(null);
+      }
+    }
     
     // Explicitly clear specific states if navigating without them, 
     // or just let them persist (persisting is usually better for back-and-forth).
@@ -190,9 +199,7 @@ export function App() {
           )}
 
           {activeView === 'ai' && (
-            <AiInvestigationView 
-              onNavigate={handleNavigate}
-            />
+            <AiInvestigationView onNavigate={handleNavigate} caseId={aiCaseId} />
           )}
 
           {activeView === 'cross-case' && (

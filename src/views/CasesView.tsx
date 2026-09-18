@@ -823,13 +823,14 @@ export const CasesView: React.FC<CasesViewProps> = ({ selectedCase, onSelectCase
                  </button>
                  <button 
                    onClick={() => {
+                     const cid = selectedCase.id;
                      onSelectCase(null);
-                     onNavigate('ai');
+                     onNavigate('ai', { caseId: cid });
                    }}
                    className="btn btn-primary" 
                    style={{ fontSize: '0.8rem', padding: '12px' }}
                  >
-                   Generate Intelligence Summary
+                   Ask NEXUS-AI
                  </button>
               </div>
             </div>

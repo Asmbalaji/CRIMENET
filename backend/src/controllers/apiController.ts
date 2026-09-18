@@ -128,6 +128,28 @@ export const createLocation = async (req: Request, res: Response, next: NextFunc
 };
 
 import { analyzeQuery, extractFIRData } from '../services/aiService';
+import { chatWithNexus, clearConversation } from '../services/aiChatService';
+
+export const chatAi = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { message, caseId, conversationId, action } = req.body;
+    
+    if (action === 'clear') {
+      const result = clearConversation(conversationId);
+      res.json(result);
+      return;
+    }
+
+    if (!message) {
+      res.status(400).json({ success: false, message: 'Message is required' });
+      return;
+    }
+    const result = await chatWithNexus(message, caseId, conversationId || 'default-session');
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const analyzeAi = async (req: Request, res: Response, next: NextFunction) => {
   try {

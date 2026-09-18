@@ -23,6 +23,7 @@ router.put('/cross-case-links/:id/verify', apiController.verifyCrossCaseLink);
 
 router.get('/ai', apiController.getAi);
 router.post('/ai/analyze', apiController.analyzeAi);
+router.post('/ai/chat', apiController.chatAi);
 router.get('/health', (req, res) => res.json({ status: 'OK', message: 'Backend is running' }));
 import multer from 'multer';
 

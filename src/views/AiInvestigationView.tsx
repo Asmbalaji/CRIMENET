@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { Bot, Send, Sparkles, Brain, Cpu, Shield, ArrowRight, UserCheck, HardDrive, RefreshCw } from 'lucide-react';
-import { AI_PROMPT_SUGGESTIONS } from '../data/mockData';
+import React, { useState, useRef, useEffect } from 'react';
+import { Bot, Send, Sparkles, Brain, Cpu, Shield, ArrowRight, UserCheck, HardDrive, RefreshCw, X, MessageSquare, PlusCircle } from 'lucide-react';
 import { ViewId } from '../components/Sidebar';
 
 interface Message {
@@ -8,40 +7,66 @@ interface Message {
   sender: 'USER' | 'NEXUS';
   text: string;
   timestamp: string;
-  confidence?: number;
-  dataPoints?: string[];
-  structured?: {
-    answer: string;
-    keyEntities: { id: string; label: string }[];
-    detectedPattern: string;
-    supportingEvidence: { id: string; label: string }[];
-    confidence: number;
-    nextStep: string;
-  };
+  sources?: string[];
+  caseIds?: string[];
+  entityIds?: string[];
+  evidenceIds?: string[];
+  locationIds?: string[];
+  relationshipIds?: string[];
 }
 
 interface AiInvestigationViewProps {
   onNavigate: (view: ViewId, payload?: any) => void;
+  caseId?: string | null;
 }
 
-export const AiInvestigationView: React.FC<AiInvestigationViewProps> = ({ onNavigate }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      sender: 'NEXUS',
-      text: 'NEXUS-AI Neural Intelligence System online. Ready to analyze verified investigation records. How can I assist you today?',
-      timestamp: '13:40',
-    },
-  ]);
+const generateUUID = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
+
+export const AiInvestigationView: React.FC<AiInvestigationViewProps> = ({ onNavigate, caseId }) => {
+  const [conversationId, setConversationId] = useState<string>(generateUUID());
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
-  const [thinking, setThinking] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const [targetCaseId, setTargetCaseId] = useState<string | null>(caseId || null);
+  const [responseLanguage, setResponseLanguage] = useState<string>('English');
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isThinking]);
+
+  // Initial Case load
+  useEffect(() => {
+    if (caseId && messages.length === 0) {
+      setTargetCaseId(caseId);
+      // Not auto-sending, but ready to answer about case
+    }
+  }, [caseId, messages.length]);
+
+  const handleClearChat = async () => {
+    try {
+      await fetch('http://localhost:5000/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear', conversationId }),
+      });
+    } catch (e) {
+      console.error(e);
+    }
+    setConversationId(generateUUID());
+    setMessages([]);
+    setTargetCaseId(null);
+  };
 
   const handleSend = async (textToSend?: string) => {
     const text = textToSend || inputText;
-    if (!text.trim()) return;
+    if (!text.trim() || isThinking) return;
 
     const userMsg: Message = {
-      id: Date.now().toString(),
+      id: generateUUID(),
       sender: 'USER',
       text: text,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -49,13 +74,18 @@ export const AiInvestigationView: React.FC<AiInvestigationViewProps> = ({ onNavi
 
     setMessages((prev) => [...prev, userMsg]);
     if (!textToSend) setInputText('');
-    setThinking(true);
+    setIsThinking(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/ai/analyze', {
+      const prompt = `[Response Language: ${responseLanguage}] ${text}`;
+      const response = await fetch('http://localhost:5000/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: text }),
+        body: JSON.stringify({ 
+          message: prompt, 
+          caseId: targetCaseId,
+          conversationId 
+        }),
       });
 
       if (!response.ok) throw new Error('API Error');
@@ -63,204 +93,212 @@ export const AiInvestigationView: React.FC<AiInvestigationViewProps> = ({ onNavi
       const data = await response.json();
       
       const aiMsg: Message = {
-        id: (Date.now() + 1).toString(),
+        id: generateUUID(),
         sender: 'NEXUS',
-        text: '', 
+        text: data.answer || 'No valid response received.', 
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        structured: {
-          answer: data.finding || 'Insufficient evidence.',
-          keyEntities: data.supportingEntities || [],
-          detectedPattern: data.detectedPattern || 'None detected.',
-          supportingEvidence: data.supportingEvidence || [],
-          confidence: data.confidence || 0,
-          nextStep: data.suggestedNextStep || 'Awaiting further investigation.'
-        },
+        sources: data.sources || [],
+        caseIds: data.caseIds || [],
+        entityIds: data.entityIds || [],
+        evidenceIds: data.evidenceIds || [],
+        locationIds: data.locationIds || [],
+        relationshipIds: data.relationshipIds || []
       };
 
       setMessages((prev) => [...prev, aiMsg]);
     } catch (error) {
       const errorMsg: Message = {
-        id: (Date.now() + 1).toString(),
+        id: generateUUID(),
         sender: 'NEXUS',
-        text: 'NEXUS-AI Error: Could not connect to backend analysis engine or Groq API key is missing.',
+        text: 'NEXUS-AI is temporarily unavailable. Please try again.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
-      setThinking(false);
+      setIsThinking(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const SUGGESTIONS = targetCaseId ? [
+    "What evidence is associated with this case?",
+    "Who are the documented persons?",
+    "What locations are mentioned?",
+    "Summarize the case.",
+    "Are there cross-case connections?"
+  ] : [
+    "Summarize the active cases",
+    "Which entities appear in multiple cases?",
+    "Show cross-case connections",
+    "Find shared entities between cases"
+  ];
+
+  const renderIds = (ids: string[], type: string, view: ViewId) => {
+    if (!ids || ids.length === 0) return null;
+    return (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+        {ids.map(id => (
+          <button 
+            key={id}
+            onClick={() => onNavigate(view, type === 'case' ? { id } : {})}
+            className="badge badge-cyan" 
+            style={{ cursor: 'pointer', background: 'transparent', border: '1px solid var(--accent-cyan)' }}
+          >
+            {id} <ArrowRight size={10} style={{ marginLeft: '4px' }} />
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: 'calc(100vh - 120px)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', minHeight: 'calc(100vh - 120px)' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 700, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Bot size={28} style={{ color: 'var(--accent-cyan)' }} /> NEXUS AI Investigation Assistant
+            <Bot size={28} style={{ color: 'var(--accent-cyan)' }} /> NEXUS-AI Investigation Assistant
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            NEURAL NETWORK REASONING ENGINE • SIH DEMO MODEL
+            {targetCaseId ? `CURRENT CONTEXT: ${targetCaseId}` : 'GLOBAL INVESTIGATION MODE'}
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="badge badge-emerald">NEURAL ENGINE: ONLINE</span>
-          <span className="badge badge-cyan">MODEL: SIH-NEXUS-v2.4</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <select 
+            value={responseLanguage}
+            onChange={e => setResponseLanguage(e.target.value)}
+            className="input-field"
+            style={{ width: '140px', padding: '6px 10px', fontSize: '0.8rem' }}
+          >
+            {['English', 'Tamil', 'Hindi', 'Telugu', 'Malayalam', 'Kannada', 'Bengali', 'Marathi', 'Gujarati', 'Punjabi', 'Odia', 'Assamese', 'Urdu'].map(lang => (
+              <option key={lang} value={lang}>{lang}</option>
+            ))}
+          </select>
+          <button className="btn btn-secondary" onClick={handleClearChat} style={{ fontSize: '0.8rem' }}>
+            <PlusCircle size={14} /> New Conversation
+          </button>
+          <span className="badge badge-emerald">● ONLINE</span>
         </div>
       </div>
 
-      {/* Chat Container + Prompt Chips */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', flex: 1, minHeight: 0 }}>
-        {/* Chat History Panel */}
-        <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', background: '#0a0f1d' }}>
-          {/* Messages Stream */}
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', paddingRight: '8px' }}>
-            {messages.map((msg) => (
+      {/* Chat Container */}
+      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#0a0f1d' }}>
+        {/* Messages Stream */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          {messages.length === 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', gap: '16px' }}>
+              <Brain size={48} style={{ opacity: 0.3 }} />
+              <h3 style={{ fontSize: '1.2rem', color: '#fff' }}>How can I help with the investigation?</h3>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '600px' }}>
+                {SUGGESTIONS.map(s => (
+                  <button 
+                    key={s}
+                    onClick={() => handleSend(s)}
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.8rem', background: 'rgba(255,255,255,0.03)' }}
+                  >
+                    <MessageSquare size={14} /> {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              style={{
+                display: 'flex',
+                justifyContent: msg.sender === 'USER' ? 'flex-end' : 'flex-start',
+              }}
+            >
               <div
-                key={msg.id}
                 style={{
-                  display: 'flex',
-                  justifyContent: msg.sender === 'USER' ? 'flex-end' : 'flex-start',
+                  maxWidth: '85%',
+                  minWidth: '250px',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  background: msg.sender === 'USER' ? 'linear-gradient(135deg, rgba(0,240,255,0.15) 0%, rgba(59,130,246,0.15) 100%)' : 'rgba(15, 23, 42, 0.95)',
+                  border: msg.sender === 'USER' ? '1px solid var(--border-cyan)' : '1px solid var(--border-subtle)',
+                  boxShadow: msg.sender === 'USER' ? '0 0 15px var(--accent-cyan-glow)' : 'none',
                 }}
               >
-                <div
-                  style={{
-                    maxWidth: '80%',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    background: msg.sender === 'USER' ? 'linear-gradient(135deg, rgba(0,240,255,0.2) 0%, rgba(59,130,246,0.2) 100%)' : 'rgba(15, 23, 42, 0.9)',
-                    border: msg.sender === 'USER' ? '1px solid var(--border-cyan)' : '1px solid var(--border-subtle)',
-                    boxShadow: msg.sender === 'USER' ? '0 0 15px var(--accent-cyan-glow)' : 'none',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: msg.sender === 'USER' ? 'var(--accent-cyan)' : 'var(--accent-emerald)', fontFamily: 'var(--font-mono)' }}>
-                      {msg.sender === 'USER' ? 'INVESTIGATOR' : 'NEXUS-AI NEURAL ENGINE'}
-                    </span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {msg.sender === 'NEXUS' && <span className="badge badge-medium" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>SYNTHETIC AI ANALYSIS</span>}
-                      <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                        {msg.timestamp}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Render Standard Text */}
-                  {msg.text && (
-                    <p style={{ fontSize: '0.875rem', color: '#ffffff', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
-                      {msg.text}
-                    </p>
-                  )}
-
-                  {/* Render Structured AI Output */}
-                  {msg.structured && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.85rem' }}>
-                      <p style={{ color: '#ffffff', lineHeight: 1.5 }}>{msg.structured.answer}</p>
-                      
-                      <div style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', borderLeft: '3px solid var(--accent-cyan)' }}>
-                        <div style={{ color: 'var(--accent-cyan)', fontWeight: 600, fontSize: '0.75rem', marginBottom: '4px' }}>KEY ENTITIES</div>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                          {msg.structured.keyEntities.map((ent, i) => (
-                            <button key={i} className="badge badge-cyan" style={{ cursor: 'pointer', border: 'none' }} onClick={() => onNavigate('network', { nodeId: ent.id })}>
-                              {ent.label} <ArrowRight size={10} style={{ marginLeft: '4px' }} />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', borderLeft: '3px solid var(--accent-amber)' }}>
-                        <div style={{ color: 'var(--accent-amber)', fontWeight: 600, fontSize: '0.75rem', marginBottom: '4px' }}>DETECTED PATTERN</div>
-                        <div style={{ color: '#ffffff' }}>{msg.structured.detectedPattern}</div>
-                      </div>
-
-                      <div style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', borderLeft: '3px solid var(--accent-blue)' }}>
-                        <div style={{ color: 'var(--accent-blue)', fontWeight: 600, fontSize: '0.75rem', marginBottom: '4px' }}>SUPPORTING EVIDENCE</div>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                          {msg.structured.supportingEvidence.map((ev, i) => (
-                            <button key={i} className="badge badge-blue" style={{ cursor: 'pointer', border: 'none' }} onClick={() => onNavigate('evidence', { evidenceId: ev.id })}>
-                              {ev.label} <ArrowRight size={10} style={{ marginLeft: '4px' }} />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '10px', marginTop: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            <strong style={{ color: 'var(--accent-emerald)' }}>CONFIDENCE: {msg.structured.confidence}%</strong> (Synthetic Demo)
-                         </div>
-                         <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>
-                            <strong>NEXT:</strong> {msg.structured.nextStep}
-                         </div>
-                      </div>
-                    </div>
-                  )}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: msg.sender === 'USER' ? 'var(--accent-cyan)' : 'var(--accent-emerald)', fontFamily: 'var(--font-mono)' }}>
+                    {msg.sender === 'USER' ? 'INVESTIGATOR' : 'NEXUS-AI'}
+                  </span>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    {msg.timestamp}
+                  </span>
                 </div>
-              </div>
-            ))}
 
-            {thinking && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--accent-cyan)', fontSize: '0.85rem', fontFamily: 'var(--font-mono)' }}>
-                <Cpu size={18} className="radar-spinner" /> Processing Neural Network Data Nodes...
-              </div>
-            )}
-          </div>
+                <div style={{ fontSize: '0.9rem', color: '#fff', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                  {msg.text}
+                </div>
 
-          {/* Input Box */}
-          <div style={{ display: 'flex', gap: '10px', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)' }}>
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Ask NEXUS-AI e.g. 'Predict high risk leads for Case 091'..."
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              style={{ fontFamily: 'var(--font-mono)' }}
-            />
-            <button onClick={() => handleSend()} className="btn btn-primary" style={{ padding: '0 20px' }}>
-              <Send size={18} />
-            </button>
-          </div>
+                {msg.sender === 'NEXUS' && (
+                  <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {msg.sources && msg.sources.length > 0 && (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', paddingTop: '8px' }}>
+                        <strong>Sources:</strong> {msg.sources.join(', ')}
+                      </div>
+                    )}
+                    
+                    {renderIds(msg.caseIds || [], 'case', 'cases')}
+                    {renderIds(msg.entityIds || [], 'entity', 'suspects')}
+                    {renderIds(msg.evidenceIds || [], 'evidence', 'evidence')}
+                    {renderIds(msg.locationIds || [], 'location', 'map')}
+                    {renderIds(msg.relationshipIds || [], 'relationship', 'cross-case')}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {isThinking && (
+            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.95)', border: '1px solid var(--border-subtle)' }}>
+                <span className="badge badge-emerald">
+                  <RefreshCw size={12} className="radar-spinner" style={{ marginRight: '6px' }} /> NEXUS-AI is analyzing...
+                </span>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
-        {/* AI Prompt Suggestions Side Panel */}
-        <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div className="card-title" style={{ fontSize: '1rem', color: 'var(--accent-cyan)' }}>
-            <Sparkles size={18} /> Suggested AI Queries
+        {/* Input Area */}
+        <div style={{ padding: '20px', borderTop: '1px solid var(--border-subtle)', background: 'rgba(5, 8, 17, 0.9)' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+            <textarea
+              className="input-field"
+              placeholder={targetCaseId ? `Ask NEXUS-AI about ${targetCaseId}...` : "Ask NEXUS-AI about cases, entities, evidence, locations or relationships..."}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isThinking}
+              rows={2}
+              style={{ flex: 1, resize: 'none', fontFamily: 'var(--font-sans)', padding: '12px 16px' }}
+            />
+            <button 
+              className="btn btn-primary" 
+              onClick={() => handleSend()}
+              disabled={isThinking || !inputText.trim()}
+              style={{ padding: '12px 24px', height: '100%' }}
+            >
+              <Send size={18} /> Send
+            </button>
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            Click prompt chip to execute instant automated analysis:
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {AI_PROMPT_SUGGESTIONS.map((prompt, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSend(prompt)}
-                style={{
-                  padding: '12px',
-                  borderRadius: '8px',
-                  background: 'rgba(15,23,42,0.8)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-secondary)',
-                  fontSize: '0.775rem',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s ease',
-                  fontFamily: 'var(--font-sans)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--accent-cyan)';
-                  e.currentTarget.style.color = '#ffffff';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                  e.currentTarget.style.color = 'var(--text-secondary)';
-                }}
-              >
-                {prompt}
-              </button>
-            ))}
+          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '12px' }}>
+            Press Enter to send, Shift + Enter for new line. Analytical risk indicators are not determinations of guilt.
           </div>
         </div>
       </div>
